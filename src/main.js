@@ -3,359 +3,380 @@ import "./styles.css";
 const app = document.getElementById("app");
 
 app.innerHTML = `
-  <div class="page-shell">
-    <header class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">FormulaDream</p>
-        <h1>FormulaDream F1 Race Center</h1>
-        <p class="hero-text">
-          Follow live Formula 1 action, explore season standings, inspect every
-          driver and circuit, and stay on top of each weekend from one polished
-          Race Center experience.
-        </p>
-      </div>
-      <div class="hero-status">
-        <div class="status-chip">
-          <span class="status-label">Race Feed</span>
-          <strong id="status-source">Waiting</strong>
-        </div>
-        <div class="status-chip">
-          <span class="status-label">Live Refresh</span>
-          <strong id="status-refresh">Manual</strong>
-        </div>
-      </div>
-    </header>
-
-    <section class="control-panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">Welcome</p>
-          <h2>Sign In And Personalize</h2>
-        </div>
-        <div class="action-row">
-          <button id="logout-button" class="button ghost">Logout</button>
-          <button id="load-dashboard" class="button primary">Refresh Race Center</button>
-        </div>
-      </div>
-
-      <div class="field-grid">
-        <label class="field">
-          <span>Season</span>
-          <input id="season" type="number" min="2023" max="2100" />
-        </label>
-        <div class="field field-wide auth-strip">
-          <span>Authentication</span>
-          <div class="auth-status-card">
-            <div>
-              <strong id="auth-status-label">Signed out</strong>
-              <div class="subtext" id="auth-status-detail">Log in with your FormulaDream account to open your Race Center session.</div>
+  <div class="app-shell">
+    <section id="auth-view" class="auth-view">
+      <div class="auth-backdrop"></div>
+      <div class="auth-card">
+        <div class="auth-copy">
+          <p class="eyebrow">FormulaDream</p>
+          <h1>FormulaDream F1 Race Center</h1>
+          <p class="hero-text">
+            Sign in to follow the live Formula 1 session, track drivers and
+            constructors across the season, and open rich race-weekend details
+            from one polished Race Center.
+          </p>
+          <div class="auth-highlights">
+            <div class="auth-highlight">
+              <strong>Live Session</strong>
+              <span>Session status, order, weather, and race control.</span>
             </div>
-            <div class="auth-status-pill" id="auth-status-pill">No token</div>
+            <div class="auth-highlight">
+              <strong>Season View</strong>
+              <span>Drivers, teams, standings, and full race schedule.</span>
+            </div>
+            <div class="auth-highlight">
+              <strong>Circuit Guide</strong>
+              <span>Track visuals, distances, corners, and weekend context.</span>
+            </div>
           </div>
-          <input id="access-token" type="hidden" />
         </div>
-      </div>
 
-      <div class="filter-bar">
-        <label class="field">
-          <span>Driver Filter</span>
-          <select id="driver-filter"><option value="">All drivers</option></select>
-        </label>
-        <label class="field">
-          <span>Team Filter</span>
-          <select id="team-filter"><option value="">All teams</option></select>
-        </label>
-        <div class="field inline-field">
-          <span>&nbsp;</span>
-          <button id="reset-filters" class="button ghost">Reset Filters</button>
-        </div>
-        <div class="field inline-field">
-          <span>Current View</span>
-          <div class="selection-pill" id="selection-pill">All data</div>
-        </div>
-      </div>
+        <form id="login-form" class="login-panel">
+          <div>
+            <p class="eyebrow">Login</p>
+            <h2>Open Your Race Center</h2>
+            <p class="subtext">
+              Use your FormulaDream account. Your password is never stored in this
+              browser.
+            </p>
+          </div>
 
-      <div class="sub-panel">
-        <div class="sub-panel-copy">
-          <h3>FormulaDream Login</h3>
-          <p>Use your regular FormulaDream account. Your password is never stored in the browser.</p>
-        </div>
-        <div class="field-grid compact">
           <label class="field">
             <span>Login Identifier</span>
-            <input id="login-identifier" type="text" placeholder="+918507632534 or email" />
+            <input id="login-identifier" type="text" placeholder="+91..., email, or username" autocomplete="username" />
           </label>
+
           <label class="field">
             <span>Password</span>
-            <input id="login-password" type="password" placeholder="Password" />
+            <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" />
+          </label>
+
+          <label class="field">
+            <span>Season</span>
+            <select id="season"></select>
+          </label>
+
+          <button id="login-user" class="button primary" type="submit">Sign In</button>
+          <p id="auth-feedback" class="feedback">Sign in to load your Race Center.</p>
+        </form>
+      </div>
+    </section>
+
+    <section id="dashboard-view" class="dashboard-view hidden">
+      <div class="page-shell">
+        <header class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">FormulaDream</p>
+            <h1>F1 Race Center</h1>
+            <p class="hero-text">
+              Live timing, season standings, driver insight, circuit context, and
+              current-session details in one fan-ready experience.
+            </p>
+          </div>
+
+          <div class="hero-status">
+            <div class="status-chip">
+              <span class="status-label">Race Feed</span>
+              <strong id="status-source">Waiting</strong>
+            </div>
+            <div class="status-chip">
+              <span class="status-label">Live Refresh</span>
+              <strong id="status-refresh">Manual</strong>
+            </div>
+            <div class="status-chip">
+              <span class="status-label">Session State</span>
+              <strong id="status-session">Waiting</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="control-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Session</p>
+              <h2>Your Race Center</h2>
+            </div>
+            <div class="action-row">
+              <button id="logout-button" class="button ghost">Logout</button>
+              <button id="load-dashboard" class="button primary">Refresh</button>
+            </div>
+          </div>
+
+          <div class="toolbar-grid">
+            <label class="field">
+              <span>Season</span>
+              <select id="season-toolbar"></select>
             </label>
+
+            <div class="field auth-strip">
+              <span>Authentication</span>
+              <div class="auth-status-card">
+                <div>
+                  <strong id="auth-status-label">Authenticated</strong>
+                  <div class="subtext" id="auth-status-detail">Your session is active for this browser session.</div>
+                </div>
+                <div class="auth-status-pill is-active" id="auth-status-pill">Session active</div>
+              </div>
+              <input id="access-token" type="hidden" />
+            </div>
+
+            <label class="field">
+              <span>Auto Refresh</span>
+              <label class="toggle toggle-card">
+                <input id="auto-refresh" type="checkbox" />
+                <span>Refresh every 15 seconds</span>
+              </label>
+            </label>
+          </div>
+
+          <div class="filter-bar">
+            <label class="field">
+              <span>Driver Filter</span>
+              <select id="driver-filter"><option value="">All drivers</option></select>
+            </label>
+
+            <label class="field">
+              <span>Team Filter</span>
+              <select id="team-filter"><option value="">All teams</option></select>
+            </label>
+
             <div class="field inline-field">
               <span>&nbsp;</span>
-              <button id="login-user" class="button primary">Sign In</button>
+              <button id="reset-filters" class="button ghost">Reset Filters</button>
             </div>
+
             <div class="field inline-field">
-              <span>Auto Refresh</span>
-              <label class="toggle">
-                <input id="auto-refresh" type="checkbox" />
-                <span>Every 15s</span>
-              </label>
+              <span>Current View</span>
+              <div class="selection-pill" id="selection-pill">All data</div>
             </div>
           </div>
-        </div>
 
-      <p id="feedback" class="feedback">Sign in to load the latest Race Center data.</p>
-    </section>
+          <p id="feedback" class="feedback">Loading your Race Center is one tap away.</p>
+        </section>
 
-    <section class="card inspector-card">
-      <div class="card-header">
-        <div>
-          <p class="eyebrow">Inspector</p>
-          <h2 id="inspector-title">Click a driver, team, circuit, or race weekend</h2>
-        </div>
-        <span class="counter" id="inspector-subtitle">Interactive details</span>
+        <nav class="section-tabs" aria-label="Race Center sections">
+          <button class="tab-button is-active" data-tab-target="live">Live</button>
+          <button class="tab-button" data-tab-target="season">Season</button>
+          <button class="tab-button" data-tab-target="circuits">Circuits</button>
+        </nav>
+
+        <main class="dashboard">
+          <section class="tab-panel is-active" data-tab-panel="live">
+            <section class="card session-card">
+              <div class="card-header">
+                <div>
+                  <p class="eyebrow">Current Session</p>
+                  <h2 id="session-title">Waiting for live data</h2>
+                </div>
+                <div class="timestamp" id="session-updated">Not loaded yet</div>
+              </div>
+
+              <div class="hero-track">
+                <div class="hero-badge" id="session-country-flag">GP</div>
+                <div class="hero-track-copy">
+                  <strong id="session-country-name">Unknown Country</strong>
+                  <span id="session-country-detail" class="subtext">Waiting for session data</span>
+                </div>
+              </div>
+
+              <div class="session-grid">
+                <div class="session-meta"><span class="meta-label">Grand Prix</span><strong id="event-grand-prix">-</strong></div>
+                <div class="session-meta"><span class="meta-label">Event</span><strong id="event-type">-</strong></div>
+                <div class="session-meta"><span class="meta-label">Circuit</span><strong id="session-circuit">-</strong></div>
+                <div class="session-meta"><span class="meta-label">Location</span><strong id="session-location">-</strong></div>
+                <div class="session-meta"><span class="meta-label">Window</span><strong id="session-window">-</strong></div>
+                <div class="session-meta"><span class="meta-label">Live Rows</span><strong id="session-metrics">0</strong></div>
+              </div>
+
+              <div class="metric-strip" id="live-metric-strip">
+                <div class="metric-card"><span class="meta-label">Drivers</span><strong id="metric-drivers">0</strong></div>
+                <div class="metric-card"><span class="meta-label">Positions</span><strong id="metric-positions">0</strong></div>
+                <div class="metric-card"><span class="meta-label">Messages</span><strong id="metric-messages">0</strong></div>
+                <div class="metric-card"><span class="meta-label">Weather</span><strong id="metric-weather">No</strong></div>
+              </div>
+            </section>
+
+            <section id="featured-section" class="card hidden">
+              <div class="card-header">
+                <div>
+                  <p class="eyebrow">Live Spotlight</p>
+                  <h2>Featured Drivers</h2>
+                </div>
+                <span class="counter" id="featured-count">0</span>
+              </div>
+              <div class="featured-grid" id="featured-grid"></div>
+            </section>
+
+            <section id="live-order-section" class="card hidden">
+              <div class="card-header">
+                <div>
+                  <p class="eyebrow">Track Order</p>
+                  <h2>Live Leaderboard</h2>
+                </div>
+              </div>
+              <div class="table-scroll">
+                <table class="race-table">
+                  <thead>
+                    <tr><th>Pos</th><th>Driver</th><th>Team</th><th>Gap</th></tr>
+                  </thead>
+                  <tbody id="leaderboard-body"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="split-grid split-grid--live">
+              <section id="weather-section" class="card hidden">
+                <div class="card-header">
+                  <div><p class="eyebrow">Conditions</p><h2>Weather</h2></div>
+                </div>
+                <div class="weather-grid" id="weather-grid"></div>
+              </section>
+
+              <section id="race-control-section" class="card hidden">
+                <div class="card-header">
+                  <div><p class="eyebrow">Control Feed</p><h2>Race Control</h2></div>
+                </div>
+                <ul class="feed-list" id="race-control-feed"></ul>
+              </section>
+            </section>
+
+            <section id="live-drivers-section" class="card hidden">
+              <div class="card-header">
+                <div><p class="eyebrow">Current Session</p><h2>Session Drivers</h2></div>
+                <span class="counter" id="live-drivers-count">0</span>
+              </div>
+              <div class="roster-grid" id="live-drivers-grid"></div>
+            </section>
+
+            <section id="live-standings-section" class="split-grid hidden">
+              <section id="live-driver-standings-section" class="card hidden">
+                <div class="card-header">
+                  <div><p class="eyebrow">Current Session</p><h2>Live Driver Standings</h2></div>
+                  <span class="counter" id="live-driver-standings-count">0</span>
+                </div>
+                <div class="table-scroll">
+                  <table class="race-table">
+                    <thead><tr><th>Pos</th><th>Driver</th><th>Start</th><th>Predicted</th></tr></thead>
+                    <tbody id="live-driver-standings-body"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section id="live-team-standings-section" class="card hidden">
+                <div class="card-header">
+                  <div><p class="eyebrow">Current Session</p><h2>Live Team Standings</h2></div>
+                  <span class="counter" id="live-team-standings-count">0</span>
+                </div>
+                <div class="table-scroll">
+                  <table class="race-table">
+                    <thead><tr><th>Pos</th><th>Team</th><th>Start</th><th>Predicted</th></tr></thead>
+                    <tbody id="live-team-standings-body"></tbody>
+                  </table>
+                </div>
+              </section>
+            </section>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="season">
+            <section id="season-standings-section" class="split-grid">
+              <section class="card">
+                <div class="card-header">
+                  <div><p class="eyebrow">Season View</p><h2>Driver Standings</h2></div>
+                  <span class="counter" id="driver-standings-count">0</span>
+                </div>
+                <div class="table-scroll">
+                  <table class="race-table">
+                    <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Pts</th></tr></thead>
+                    <tbody id="driver-standings-body"></tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="card-header">
+                  <div><p class="eyebrow">Season View</p><h2>Constructor Standings</h2></div>
+                  <span class="counter" id="team-standings-count">0</span>
+                </div>
+                <div class="table-scroll">
+                  <table class="race-table">
+                    <thead><tr><th>Pos</th><th>Team</th><th>Code</th><th>Pts</th></tr></thead>
+                    <tbody id="team-standings-body"></tbody>
+                  </table>
+                </div>
+              </section>
+            </section>
+
+            <section class="split-grid">
+              <section class="card">
+                <div class="card-header">
+                  <div><p class="eyebrow">Season View</p><h2>Drivers</h2></div>
+                  <span class="counter" id="drivers-count">0</span>
+                </div>
+                <div class="roster-grid" id="drivers-grid"></div>
+              </section>
+
+              <section class="card">
+                <div class="card-header">
+                  <div><p class="eyebrow">Season View</p><h2>Teams</h2></div>
+                  <span class="counter" id="teams-count">0</span>
+                </div>
+                <div class="team-grid" id="teams-grid"></div>
+              </section>
+            </section>
+
+            <section class="split-grid">
+              <section class="card">
+                <div class="card-header">
+                  <div><p class="eyebrow">Calendar</p><h2>Season Schedule</h2></div>
+                  <span class="counter" id="calendar-count">0</span>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+              </section>
+
+              <section class="card">
+                <div class="card-header">
+                  <div><p class="eyebrow">Race Weekends</p><h2>Weekend Tracker</h2></div>
+                  <span class="counter" id="weekends-count">0</span>
+                </div>
+                <div class="calendar-grid" id="weekends-grid"></div>
+              </section>
+            </section>
+          </section>
+
+          <section class="tab-panel" data-tab-panel="circuits">
+            <section class="card">
+              <div class="card-header">
+                <div><p class="eyebrow">Circuits</p><h2>Track Library</h2></div>
+                <span class="counter" id="circuits-count">0</span>
+              </div>
+              <div class="circuits-grid" id="circuits-grid"></div>
+            </section>
+          </section>
+        </main>
+
+        <section class="card inspector-card">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Inspector</p>
+              <h2 id="inspector-title">Tap a driver, team, circuit, or weekend card</h2>
+            </div>
+            <span class="counter" id="inspector-subtitle">Interactive details</span>
+          </div>
+          <div id="inspector-content" class="inspector-content">
+            <div class="placeholder-card">
+              The inspector updates as you explore the live leaderboard, season rosters,
+              weekend cards, and circuits.
+            </div>
+          </div>
+        </section>
+
+        <nav class="mobile-bottom-nav" aria-label="Race Center mobile navigation">
+          <button class="mobile-nav-button is-active" data-tab-target="live"><span>Live</span></button>
+          <button class="mobile-nav-button" data-tab-target="season"><span>Season</span></button>
+          <button class="mobile-nav-button" data-tab-target="circuits"><span>Circuits</span></button>
+        </nav>
       </div>
-      <div id="inspector-content" class="inspector-content">
-        <div class="placeholder-card">
-          Use the live leaderboard, driver cards, team cards, weekend tracker, or circuit library to inspect details.
-        </div>
-      </div>
     </section>
-
-    <nav class="section-tabs" aria-label="Race Center sections">
-      <button class="tab-button is-active" data-tab-target="live">Live</button>
-      <button class="tab-button" data-tab-target="season">Season</button>
-      <button class="tab-button" data-tab-target="circuits">Circuits</button>
-    </nav>
-
-    <main class="dashboard">
-      <section class="tab-panel is-active" data-tab-panel="live">
-      <section class="card session-card">
-        <div class="card-header">
-          <div>
-            <p class="eyebrow">Current Live Session</p>
-            <h2 id="session-title">No session loaded</h2>
-          </div>
-          <div class="timestamp" id="session-updated">Not loaded yet</div>
-        </div>
-        <p class="subtext">
-          This section always shows the latest live session from <code>/api/v1/race-center/current</code>.
-        </p>
-        <div class="hero-track">
-          <div class="hero-badge" id="session-country-flag">GP</div>
-          <div class="hero-track-copy">
-            <strong id="session-country-name">Unknown Country</strong>
-            <span id="session-country-detail" class="subtext">Waiting for session data</span>
-          </div>
-        </div>
-        <div class="session-grid">
-          <div class="session-meta"><span class="meta-label">Grand Prix</span><strong id="event-grand-prix">-</strong></div>
-          <div class="session-meta"><span class="meta-label">Event</span><strong id="event-type">-</strong></div>
-          <div class="session-meta"><span class="meta-label">Circuit</span><strong id="session-circuit">-</strong></div>
-          <div class="session-meta"><span class="meta-label">Location</span><strong id="session-location">-</strong></div>
-          <div class="session-meta"><span class="meta-label">Window</span><strong id="session-window">-</strong></div>
-          <div class="session-meta"><span class="meta-label">Live Rows</span><strong id="session-metrics">0 drivers</strong></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="card-header">
-          <div>
-            <p class="eyebrow">Live Spotlight</p>
-            <h2>Featured Drivers</h2>
-          </div>
-          <span class="counter" id="featured-count">0</span>
-        </div>
-        <div class="featured-grid" id="featured-grid">
-          <div class="placeholder-card">Top live drivers will appear here.</div>
-        </div>
-      </section>
-
-      <section class="card live-order-card">
-        <div class="card-header">
-          <div>
-            <p class="eyebrow">Track Order</p>
-            <h2>Live Leaderboard</h2>
-          </div>
-        </div>
-        <div class="table-scroll">
-          <table class="race-table">
-            <thead>
-              <tr><th>Pos</th><th>Driver</th><th>Team</th><th>Gap</th></tr>
-            </thead>
-            <tbody id="leaderboard-body">
-              <tr><td colspan="4" class="empty-row">Load the dashboard to see live order.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="split-grid">
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Current Live Session</p><h2>Live Driver Standings</h2></div>
-            <span class="counter" id="live-driver-standings-count">0</span>
-          </div>
-          <div class="table-scroll">
-            <table class="race-table">
-              <thead><tr><th>Pos</th><th>Driver</th><th>Start</th><th>Predicted</th></tr></thead>
-              <tbody id="live-driver-standings-body">
-                <tr><td colspan="4" class="empty-row">No live driver standings loaded.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Current Live Session</p><h2>Live Team Standings</h2></div>
-            <span class="counter" id="live-team-standings-count">0</span>
-          </div>
-          <div class="table-scroll">
-            <table class="race-table">
-              <thead><tr><th>Pos</th><th>Team</th><th>Start</th><th>Predicted</th></tr></thead>
-              <tbody id="live-team-standings-body">
-                <tr><td colspan="4" class="empty-row">No live team standings loaded.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-
-      <section class="split-grid">
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Season View</p><h2>Driver Standings</h2></div>
-            <span class="counter" id="driver-standings-count">0</span>
-          </div>
-          <div class="table-scroll">
-            <table class="race-table">
-              <thead><tr><th>Pos</th><th>Driver</th><th>Team</th><th>Pts</th></tr></thead>
-              <tbody id="driver-standings-body">
-                <tr><td colspan="4" class="empty-row">No season standings loaded.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Season View</p><h2>Constructor Standings</h2></div>
-            <span class="counter" id="team-standings-count">0</span>
-          </div>
-          <div class="table-scroll">
-            <table class="race-table">
-              <thead><tr><th>Pos</th><th>Team</th><th>Code</th><th>Pts</th></tr></thead>
-              <tbody id="team-standings-body">
-                <tr><td colspan="4" class="empty-row">No constructor standings loaded.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </section>
-      </section>
-
-      <section class="tab-panel" data-tab-panel="season">
-      <section class="split-grid">
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Conditions</p><h2>Weather</h2></div>
-          </div>
-          <div class="weather-grid" id="weather-grid">
-            <div class="placeholder-card">No weather snapshot yet.</div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Control Feed</p><h2>Race Control</h2></div>
-          </div>
-          <ul class="feed-list" id="race-control-feed">
-            <li class="feed-empty">No messages yet.</li>
-          </ul>
-        </section>
-      </section>
-
-      <section class="split-grid">
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Current Live Session</p><h2>Session Drivers</h2></div>
-            <span class="counter" id="live-drivers-count">0</span>
-          </div>
-          <div class="roster-grid" id="live-drivers-grid">
-            <div class="placeholder-card">No live session drivers loaded.</div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Season View</p><h2>Drivers</h2></div>
-            <span class="counter" id="drivers-count">0</span>
-          </div>
-          <div class="roster-grid" id="drivers-grid">
-            <div class="placeholder-card">No driver roster loaded.</div>
-          </div>
-        </section>
-      </section>
-      </section>
-
-      <section class="tab-panel" data-tab-panel="circuits">
-      <section class="split-grid">
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Season View</p><h2>Teams</h2></div>
-            <span class="counter" id="teams-count">0</span>
-          </div>
-          <div class="team-grid" id="teams-grid">
-            <div class="placeholder-card">No teams loaded.</div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Calendar</p><h2>Season Schedule</h2></div>
-            <span class="counter" id="calendar-count">0</span>
-          </div>
-          <div class="calendar-grid" id="calendar-grid">
-            <div class="placeholder-card">No calendar loaded.</div>
-          </div>
-        </section>
-      </section>
-
-      <section class="split-grid">
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Race Weekends</p><h2>Weekend Tracker</h2></div>
-            <span class="counter" id="weekends-count">0</span>
-          </div>
-          <div class="calendar-grid" id="weekends-grid">
-            <div class="placeholder-card">No race weekends loaded.</div>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <div><p class="eyebrow">Circuits</p><h2>Track Library</h2></div>
-            <span class="counter" id="circuits-count">0</span>
-          </div>
-          <div class="circuits-grid" id="circuits-grid">
-            <div class="placeholder-card">No circuits loaded.</div>
-          </div>
-        </section>
-      </section>
-      </section>
-    </main>
-
-    <nav class="mobile-bottom-nav" aria-label="Race Center mobile navigation">
-      <button class="mobile-nav-button is-active" data-tab-target="live">
-        <span>Live</span>
-      </button>
-      <button class="mobile-nav-button" data-tab-target="season">
-        <span>Season</span>
-      </button>
-      <button class="mobile-nav-button" data-tab-target="circuits">
-        <span>Circuits</span>
-      </button>
-    </nav>
   </div>
 `;
 
@@ -363,34 +384,55 @@ const storageKey = "race-center-ui-settings";
 const tokenStorageKey = "race-center-ui-access-token";
 const pollIntervalMs = 15000;
 const defaultConfig = {
-  defaultBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://dev.formuladream.app/gaming-service",
+  defaultBaseUrl:
+    import.meta.env.VITE_API_BASE_URL || "https://dev.formuladream.app/gaming-service",
   defaultSeason: import.meta.env.VITE_DEFAULT_SEASON || "2025",
 };
 
+const currentYear = new Date().getUTCFullYear();
+const seasonOptions = Array.from(
+  { length: Math.max(currentYear - 2023 + 2, 4) },
+  (_, index) => String(2023 + index),
+).reverse();
+
 const elements = {
+  authView: document.getElementById("auth-view"),
+  dashboardView: document.getElementById("dashboard-view"),
+  loginForm: document.getElementById("login-form"),
+  loginIdentifier: document.getElementById("login-identifier"),
+  loginPassword: document.getElementById("login-password"),
+  authFeedback: document.getElementById("auth-feedback"),
   season: document.getElementById("season"),
+  seasonToolbar: document.getElementById("season-toolbar"),
   accessToken: document.getElementById("access-token"),
   authStatusLabel: document.getElementById("auth-status-label"),
   authStatusDetail: document.getElementById("auth-status-detail"),
   authStatusPill: document.getElementById("auth-status-pill"),
-  loginIdentifier: document.getElementById("login-identifier"),
-  loginPassword: document.getElementById("login-password"),
   autoRefresh: document.getElementById("auto-refresh"),
   feedback: document.getElementById("feedback"),
   loadButton: document.getElementById("load-dashboard"),
   logoutButton: document.getElementById("logout-button"),
-  loginUserButton: document.getElementById("login-user"),
   driverFilter: document.getElementById("driver-filter"),
   teamFilter: document.getElementById("team-filter"),
   resetFiltersButton: document.getElementById("reset-filters"),
   selectionPill: document.getElementById("selection-pill"),
   tabButtons: Array.from(document.querySelectorAll("[data-tab-target]")),
   tabPanels: Array.from(document.querySelectorAll("[data-tab-panel]")),
+  featuredSection: document.getElementById("featured-section"),
+  liveOrderSection: document.getElementById("live-order-section"),
+  weatherSection: document.getElementById("weather-section"),
+  raceControlSection: document.getElementById("race-control-section"),
+  liveDriversSection: document.getElementById("live-drivers-section"),
+  liveStandingsSection: document.getElementById("live-standings-section"),
+  liveDriverStandingsSection: document.getElementById("live-driver-standings-section"),
+  liveTeamStandingsSection: document.getElementById("live-team-standings-section"),
+  seasonStandingsSection: document.getElementById("season-standings-section"),
   inspectorTitle: document.getElementById("inspector-title"),
   inspectorSubtitle: document.getElementById("inspector-subtitle"),
   inspectorContent: document.getElementById("inspector-content"),
   statusSource: document.getElementById("status-source"),
   statusRefresh: document.getElementById("status-refresh"),
+  statusSession: document.getElementById("status-session"),
   sessionTitle: document.getElementById("session-title"),
   sessionUpdated: document.getElementById("session-updated"),
   eventGrandPrix: document.getElementById("event-grand-prix"),
@@ -402,6 +444,10 @@ const elements = {
   sessionCountryFlag: document.getElementById("session-country-flag"),
   sessionCountryName: document.getElementById("session-country-name"),
   sessionCountryDetail: document.getElementById("session-country-detail"),
+  metricDrivers: document.getElementById("metric-drivers"),
+  metricPositions: document.getElementById("metric-positions"),
+  metricMessages: document.getElementById("metric-messages"),
+  metricWeather: document.getElementById("metric-weather"),
   featuredCount: document.getElementById("featured-count"),
   featuredGrid: document.getElementById("featured-grid"),
   leaderboardBody: document.getElementById("leaderboard-body"),
@@ -446,7 +492,7 @@ const appState = {
 
 function readSettings() {
   return {
-    season: elements.season.value.trim(),
+    season: elements.seasonToolbar.value.trim() || elements.season.value.trim(),
     accessToken: elements.accessToken.value.trim(),
     loginIdentifier: elements.loginIdentifier.value.trim(),
     autoRefresh: elements.autoRefresh.checked,
@@ -465,24 +511,42 @@ function persistSettings() {
   );
 }
 
+function setSeasonValue(value) {
+  const season = String(value || defaultConfig.defaultSeason);
+  elements.season.value = season;
+  elements.seasonToolbar.value = season;
+}
+
 function persistAccessToken(token) {
   sessionStorage.setItem(tokenStorageKey, token);
   elements.accessToken.value = token;
   updateAuthStatus();
+  showDashboard();
 }
 
 function clearAccessToken() {
   sessionStorage.removeItem(tokenStorageKey);
   elements.accessToken.value = "";
   updateAuthStatus();
+  showAuthView();
+}
+
+function showAuthView() {
+  elements.authView.classList.remove("hidden");
+  elements.dashboardView.classList.add("hidden");
+}
+
+function showDashboard() {
+  elements.authView.classList.add("hidden");
+  elements.dashboardView.classList.remove("hidden");
 }
 
 function updateAuthStatus() {
   const isSignedIn = Boolean(elements.accessToken.value.trim());
   elements.authStatusLabel.textContent = isSignedIn ? "Authenticated" : "Signed out";
   elements.authStatusDetail.textContent = isSignedIn
-    ? "Your session token is stored only for this browser session."
-    : "Log in with your FormulaDream account to load Race Center data.";
+    ? "Your Race Center session stays active only for this browser session."
+    : "Sign in with your FormulaDream account to load Race Center data.";
   elements.authStatusPill.textContent = isSignedIn ? "Session active" : "No token";
   elements.authStatusPill.classList.toggle("is-active", isSignedIn);
 }
@@ -499,6 +563,11 @@ function escapeHtml(value) {
 function applyFeedback(message, tone = "") {
   elements.feedback.textContent = message;
   elements.feedback.className = `feedback ${tone}`.trim();
+}
+
+function applyAuthFeedback(message, tone = "") {
+  elements.authFeedback.textContent = message;
+  elements.authFeedback.className = `feedback ${tone}`.trim();
 }
 
 function setInspector(title, subtitle, html) {
@@ -527,14 +596,30 @@ function renderInspectorFacts(facts) {
 function loadDefaults() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
   const accessToken = sessionStorage.getItem(tokenStorageKey) || "";
+  const season = saved.season || defaultConfig.defaultSeason || String(currentYear);
 
-  elements.season.value = saved.season || defaultConfig.defaultSeason || new Date().getUTCFullYear();
+  optionList(
+    elements.season,
+    seasonOptions.map((item) => ({ value: item, label: item })),
+    "Select season",
+  );
+  optionList(
+    elements.seasonToolbar,
+    seasonOptions.map((item) => ({ value: item, label: item })),
+    "Select season",
+  );
+  setSeasonValue(season);
   elements.accessToken.value = accessToken;
   elements.loginIdentifier.value = saved.loginIdentifier || "";
-  elements.autoRefresh.checked = saved.autoRefresh || false;
+  elements.autoRefresh.checked = Boolean(saved.autoRefresh);
   elements.statusRefresh.textContent = elements.autoRefresh.checked ? "Every 15s" : "Manual";
   updateAuthStatus();
   setActiveTab(appState.currentTab);
+  if (accessToken) {
+    showDashboard();
+  } else {
+    showAuthView();
+  }
 }
 
 function buildUrl(baseUrl, path, query) {
@@ -578,7 +663,9 @@ async function apiRequest(path, { method = "GET", query, body, includeAuth = tru
   }
 
   if (!response.ok) {
-    throw new Error(payload.detail || payload.errorMessage || `Request failed with status ${response.status}`);
+    throw new Error(
+      payload.detail || payload.errorMessage || `Request failed with status ${response.status}`,
+    );
   }
 
   return payload;
@@ -635,20 +722,11 @@ function normalizeTeamName(value) {
     rbf1team: "rb",
     racingbulls: "rb",
     haasf1team: "haas",
-    alpinef1team: "alpine",
-    astonmartinaramcoformulaoneteam: "astonmartin",
-    astonmartin: "astonmartin",
-    scuderiaferrari: "ferrari",
-    ferrari: "ferrari",
-    mercedesamgpetronasformulaoneteam: "mercedes",
-    mercedes: "mercedes",
     kicksauber: "sauber",
     sauber: "sauber",
-    cadillacf1team: "cadillac",
-    cadillac: "cadillac",
-    audi: "audi",
-    mclaren: "mclaren",
-    williams: "williams",
+    astonmartinaramcoformulaoneteam: "astonmartin",
+    scuderiaferrari: "ferrari",
+    mercedesamgpetronasformulaoneteam: "mercedes",
   };
   const sanitized = (value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   return aliases[sanitized] || sanitized;
@@ -695,7 +773,9 @@ function getFlagMarkup(name, alt) {
   if (!code) {
     return `<span class="flag-fallback">${escapeHtml((alt || name || "GP").slice(0, 2).toUpperCase())}</span>`;
   }
-  return `<img class="flag-image" src="https://flagcdn.com/w40/${code}.png" alt="${escapeHtml(alt || name)} flag" />`;
+  return `<img class="flag-image" src="https://flagcdn.com/w40/${code}.png" alt="${escapeHtml(
+    alt || name,
+  )} flag" />`;
 }
 
 function buildTeamLookup(teams) {
@@ -720,8 +800,14 @@ function buildSeasonDriverCodeLookup(drivers) {
 
 function getTeamTheme(teamLookup, liveTeamName, fallbackColor) {
   const team = teamLookup.get(normalizeTeamName(liveTeamName));
-  const primary = formatColor(team?.gradientStart || team?.primaryColor, fallbackColor || "#24344e");
-  const secondary = formatColor(team?.gradientEnd || team?.secondaryColor || team?.primaryColor, "#101b2d");
+  const primary = formatColor(
+    team?.gradientStart || team?.primaryColor,
+    fallbackColor || "#24344e",
+  );
+  const secondary = formatColor(
+    team?.gradientEnd || team?.secondaryColor || team?.primaryColor,
+    "#101b2d",
+  );
   return {
     team,
     accent: primary,
@@ -758,7 +844,8 @@ function isDriverVisible(presentation) {
   }
   if (
     appState.filters.teamName &&
-    normalizeTeamName(presentation.teamName) !== normalizeTeamName(appState.filters.teamName)
+    normalizeTeamName(presentation.teamName) !==
+      normalizeTeamName(appState.filters.teamName)
   ) {
     return false;
   }
@@ -853,16 +940,25 @@ function skeletonRows(columns = 4, rows = 4) {
     .join("");
 }
 
+function setSectionVisibility(element, visible) {
+  element.classList.toggle("hidden", !visible);
+}
+
 function renderLoadingSkeletons() {
+  setSectionVisibility(elements.featuredSection, true);
+  setSectionVisibility(elements.liveOrderSection, true);
+  setSectionVisibility(elements.weatherSection, true);
+  setSectionVisibility(elements.raceControlSection, true);
+  setSectionVisibility(elements.liveDriversSection, true);
   elements.featuredGrid.innerHTML = skeletonCard(3);
-  elements.weatherGrid.innerHTML = skeletonCard(6);
-  elements.raceControlFeed.innerHTML = skeletonCard(4);
+  elements.weatherGrid.innerHTML = skeletonCard(4);
+  elements.raceControlFeed.innerHTML = skeletonCard(3);
   elements.liveDriversGrid.innerHTML = skeletonCard(6);
   elements.driversGrid.innerHTML = skeletonCard(6);
   elements.teamsGrid.innerHTML = skeletonCard(6);
   elements.calendarGrid.innerHTML = skeletonCard(6);
   elements.weekendsGrid.innerHTML = skeletonCard(6);
-  elements.circuitsGrid.innerHTML = skeletonCard(4);
+  elements.circuitsGrid.innerHTML = skeletonCard(6);
   elements.leaderboardBody.innerHTML = skeletonRows(4, 6);
   elements.liveDriverStandingsBody.innerHTML = skeletonRows(4, 4);
   elements.liveTeamStandingsBody.innerHTML = skeletonRows(4, 4);
@@ -885,29 +981,43 @@ function renderFeaturedDrivers(positions, driverByNumber, lookups) {
     .map((row) => {
       const liveDriver = driverByNumber.get(row.driver_number) || {};
       const seasonDriver = lookups.seasonDrivers.get(row.driver_number);
-      return { row, presentation: getDriverPresentation(liveDriver, seasonDriver, lookups.teamLookup) };
+      return {
+        row,
+        presentation: getDriverPresentation(
+          liveDriver,
+          seasonDriver,
+          lookups.teamLookup,
+        ),
+      };
     })
     .filter((item) => isDriverVisible(item.presentation));
 
+  setSectionVisibility(elements.featuredSection, featured.length > 0);
   elements.featuredCount.textContent = `${featured.length}`;
   if (!featured.length) {
-    elements.featuredGrid.innerHTML = '<div class="placeholder-card">Top live drivers will appear here.</div>';
     return;
   }
 
   elements.featuredGrid.innerHTML = featured
     .map(({ row, presentation }) => {
-      const flag = getFlagMarkup(presentation.nationality, presentation.nationality || presentation.name);
+      const flag = getFlagMarkup(
+        presentation.nationality,
+        presentation.nationality || presentation.name,
+      );
       const image = presentation.image
         ? `<img class="driver-avatar" src="${presentation.image}" alt="${escapeHtml(presentation.name)}" />`
-        : `<div class="driver-avatar fallback-avatar">${escapeHtml(presentation.code)}</div>`;
+        : `<div class="driver-avatar fallback-avatar">${escapeHtml(
+            presentation.code,
+          )}</div>`;
       return `
         <article class="driver-card inspectable featured-card" data-inspect-type="driver" data-driver-number="${presentation.number}" style="background:${presentation.gradient}">
           ${image}
           <div>
             <h3>P${row.position} • ${escapeHtml(presentation.name)}</h3>
             <div class="subtext">${escapeHtml(presentation.teamName)}</div>
-            <div class="subtext inline-flag">${flag}<span>${escapeHtml(presentation.nationality || "Nationality unavailable")}</span></div>
+            <div class="subtext inline-flag">${flag}<span>${escapeHtml(
+              presentation.nationality || "Nationality unavailable",
+            )}</span></div>
           </div>
         </article>
       `;
@@ -920,9 +1030,13 @@ function renderCurrent(currentResponse, lookups) {
   const session = response.session || {};
   const event = response.formulaDreamEvent || {};
   const drivers = response.drivers || [];
-  const positions = [...(response.positions || [])].sort((a, b) => a.position - b.position);
+  const positions = [...(response.positions || [])].sort(
+    (a, b) => (a.position ?? 999) - (b.position ?? 999),
+  );
   const intervals = response.intervals || [];
-  const intervalByDriver = new Map(intervals.map((item) => [item.driver_number, item]));
+  const intervalByDriver = new Map(
+    intervals.map((item) => [item.driver_number, item]),
+  );
   const driverByNumber = new Map(drivers.map((item) => [item.driver_number, item]));
   const latestWeather = (response.weather || [])[0];
   const raceControl = response.raceControl || [];
@@ -930,34 +1044,51 @@ function renderCurrent(currentResponse, lookups) {
   const liveTeamStandings = response.teamStandings || [];
 
   elements.statusSource.textContent = response.source || "Unknown";
+  elements.statusSession.textContent = session.sessionName || event.event || "Waiting";
   elements.sessionTitle.textContent = `${session.countryName || "Unknown GP"} ${session.sessionName || ""}`.trim();
   elements.sessionUpdated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
   elements.eventGrandPrix.textContent = event.grandPrix || "-";
   elements.eventType.textContent = event.event || session.sessionType || "-";
   elements.sessionCircuit.textContent = session.circuitShortName || "-";
-  elements.sessionLocation.textContent = [session.location, session.countryName].filter(Boolean).join(", ") || "-";
-  elements.sessionWindow.textContent = `${formatDateTime(session.dateStart)} - ${formatDateTime(session.dateEnd)}`;
-  elements.sessionMetrics.textContent = `${drivers.length} drivers • ${positions.length} positions • ${(response.raceControl || []).length} messages`;
-  elements.sessionCountryFlag.innerHTML = getFlagMarkup(session.countryName, session.countryName || "Grand Prix");
+  elements.sessionLocation.textContent =
+    [session.location, session.countryName].filter(Boolean).join(", ") || "-";
+  elements.sessionWindow.textContent = `${formatDateTime(session.dateStart)} - ${formatDateTime(
+    session.dateEnd,
+  )}`;
+  elements.sessionMetrics.textContent = `${drivers.length} drivers • ${positions.length} positions • ${raceControl.length} messages`;
+  elements.sessionCountryFlag.innerHTML = getFlagMarkup(
+    session.countryName,
+    session.countryName || "Grand Prix",
+  );
   elements.sessionCountryName.textContent = session.countryName || "Unknown Country";
   elements.sessionCountryDetail.textContent = `${session.location || "-"} • ${session.circuitShortName || "-"}`;
+  elements.metricDrivers.textContent = String(drivers.length);
+  elements.metricPositions.textContent = String(positions.length);
+  elements.metricMessages.textContent = String(raceControl.length);
+  elements.metricWeather.textContent = latestWeather ? "Live" : "No";
 
   const filteredPositions = positions.filter((row) => {
     const liveDriver = driverByNumber.get(row.driver_number) || {};
     const seasonDriver = lookups.seasonDrivers.get(row.driver_number);
-    const presentation = getDriverPresentation(liveDriver, seasonDriver, lookups.teamLookup);
+    const presentation = getDriverPresentation(
+      liveDriver,
+      seasonDriver,
+      lookups.teamLookup,
+    );
     return isDriverVisible(presentation);
   });
 
-  if (!filteredPositions.length) {
-    elements.leaderboardBody.innerHTML =
-      '<tr><td colspan="4" class="empty-row">No live positions available for this session yet.</td></tr>';
-  } else {
+  setSectionVisibility(elements.liveOrderSection, filteredPositions.length > 0);
+  if (filteredPositions.length) {
     elements.leaderboardBody.innerHTML = filteredPositions
       .map((row) => {
         const driver = driverByNumber.get(row.driver_number) || {};
         const seasonDriver = lookups.seasonDrivers.get(row.driver_number);
-        const presentation = getDriverPresentation(driver, seasonDriver, lookups.teamLookup);
+        const presentation = getDriverPresentation(
+          driver,
+          seasonDriver,
+          lookups.teamLookup,
+        );
         const interval = intervalByDriver.get(row.driver_number);
         const gap = interval?.gap_to_leader ?? interval?.interval ?? "-";
         return `
@@ -987,9 +1118,8 @@ function renderCurrent(currentResponse, lookups) {
       .join("");
   }
 
-  if (!latestWeather) {
-    elements.weatherGrid.innerHTML = '<div class="placeholder-card">No weather snapshot yet.</div>';
-  } else {
+  setSectionVisibility(elements.weatherSection, Boolean(latestWeather));
+  if (latestWeather) {
     const items = [
       ["Air Temp", `${latestWeather.air_temperature}°C`],
       ["Track Temp", `${latestWeather.track_temperature}°C`],
@@ -1010,9 +1140,8 @@ function renderCurrent(currentResponse, lookups) {
       .join("");
   }
 
-  if (!raceControl.length) {
-    elements.raceControlFeed.innerHTML = '<li class="feed-empty">No race control messages yet.</li>';
-  } else {
+  setSectionVisibility(elements.raceControlSection, raceControl.length > 0);
+  if (raceControl.length) {
     elements.raceControlFeed.innerHTML = raceControl
       .slice(0, 15)
       .map(
@@ -1056,12 +1185,13 @@ function renderDrivers(driversResponse, teamLookup) {
   elements.driversCount.textContent = `${visibleDrivers.length}`;
 
   if (!visibleDrivers.length) {
-    elements.driversGrid.innerHTML = '<div class="placeholder-card">No drivers loaded for this season.</div>';
+    elements.driversGrid.innerHTML =
+      '<div class="placeholder-card">No drivers loaded for this season.</div>';
     return;
   }
 
   elements.driversGrid.innerHTML = visibleDrivers
-    .slice(0, 16)
+    .slice(0, 20)
     .map((driver) => {
       const presentation = getDriverPresentation(
         {
@@ -1076,15 +1206,21 @@ function renderDrivers(driversResponse, teamLookup) {
       );
       const image = driver.driverImageUrl
         ? `<img class="driver-avatar" src="${driver.driverImageUrl}" alt="${escapeHtml(driver.fullName)}" />`
-        : `<div class="driver-avatar fallback-avatar">${escapeHtml(driver.driverCode || "DRV")}</div>`;
+        : `<div class="driver-avatar fallback-avatar">${escapeHtml(
+            driver.driverCode || "DRV",
+          )}</div>`;
       const flag = getFlagMarkup(driver.nationality, driver.nationality || driver.fullName);
       return `
         <article class="driver-card inspectable" data-inspect-type="driver" data-driver-number="${driver.driverNumber}" style="background:${presentation.gradient}">
           ${image}
           <div>
             <h3>${escapeHtml(presentation.name)}</h3>
-            <div class="subtext">${escapeHtml(driver.driverCode || "-")} • #${escapeHtml(driver.driverNumber || "-")}</div>
-            <div class="subtext inline-flag">${flag}<span>${escapeHtml(driver.nationality || "Unknown nationality")}</span></div>
+            <div class="subtext">${escapeHtml(
+              driver.driverCode || "-",
+            )} • #${escapeHtml(driver.driverNumber || "-")}</div>
+            <div class="subtext inline-flag">${flag}<span>${escapeHtml(
+              driver.nationality || "Unknown nationality",
+            )}</span></div>
           </div>
         </article>
       `;
@@ -1095,34 +1231,50 @@ function renderDrivers(driversResponse, teamLookup) {
 function renderLiveDrivers(drivers, lookups) {
   const visibleDrivers = drivers.filter((driver) => {
     const seasonDriver = lookups.seasonDrivers.get(driver.driver_number);
-    const presentation = getDriverPresentation(driver, seasonDriver, lookups.teamLookup);
+    const presentation = getDriverPresentation(
+      driver,
+      seasonDriver,
+      lookups.teamLookup,
+    );
     return isDriverVisible(presentation);
   });
-  elements.liveDriversCount.textContent = `${visibleDrivers.length}`;
 
+  setSectionVisibility(elements.liveDriversSection, visibleDrivers.length > 0);
+  elements.liveDriversCount.textContent = `${visibleDrivers.length}`;
   if (!visibleDrivers.length) {
-    elements.liveDriversGrid.innerHTML =
-      '<div class="placeholder-card">No live session drivers loaded.</div>';
     return;
   }
 
   elements.liveDriversGrid.innerHTML = visibleDrivers
-    .slice(0, 16)
+    .slice(0, 20)
     .map((driver) => {
       const seasonDriver = lookups.seasonDrivers.get(driver.driver_number);
-      const presentation = getDriverPresentation(driver, seasonDriver, lookups.teamLookup);
+      const presentation = getDriverPresentation(
+        driver,
+        seasonDriver,
+        lookups.teamLookup,
+      );
       const image = presentation.image
         ? `<img class="driver-avatar" src="${presentation.image}" alt="${escapeHtml(presentation.name)}" />`
-        : `<div class="driver-avatar fallback-avatar">${escapeHtml(presentation.code || "DRV")}</div>`;
-      const flag = getFlagMarkup(presentation.nationality, presentation.nationality || presentation.name);
+        : `<div class="driver-avatar fallback-avatar">${escapeHtml(
+            presentation.code || "DRV",
+          )}</div>`;
+      const flag = getFlagMarkup(
+        presentation.nationality,
+        presentation.nationality || presentation.name,
+      );
       return `
         <article class="driver-card inspectable" data-inspect-type="driver" data-driver-number="${presentation.number}" style="background:${presentation.gradient}; border-left: 4px solid ${presentation.accent}">
           ${image}
           <div>
             <h3>${escapeHtml(presentation.name)}</h3>
-            <div class="subtext">${escapeHtml(presentation.code || "-")} • #${escapeHtml(presentation.number)}</div>
+            <div class="subtext">${escapeHtml(
+              presentation.code || "-",
+            )} • #${escapeHtml(presentation.number)}</div>
             <div class="subtext">${escapeHtml(presentation.teamName)}</div>
-            <div class="subtext inline-flag">${flag}<span>${escapeHtml(presentation.nationality || "Nationality unavailable")}</span></div>
+            <div class="subtext inline-flag">${flag}<span>${escapeHtml(
+              presentation.nationality || "Nationality unavailable",
+            )}</span></div>
           </div>
         </article>
       `;
@@ -1134,14 +1286,21 @@ function renderLiveDriverStandings(standings, driverByNumber, lookups) {
   const filteredStandings = standings.filter((row) => {
     const driver = driverByNumber.get(row.driver_number) || {};
     const seasonDriver = lookups.seasonDrivers.get(row.driver_number);
-    const presentation = getDriverPresentation(driver, seasonDriver, lookups.teamLookup);
+    const presentation = getDriverPresentation(
+      driver,
+      seasonDriver,
+      lookups.teamLookup,
+    );
     return isDriverVisible(presentation);
   });
   elements.liveDriverStandingsCount.textContent = `${filteredStandings.length}`;
+  setSectionVisibility(
+    elements.liveDriverStandingsSection,
+    filteredStandings.length > 0,
+  );
+  setSectionVisibility(elements.liveStandingsSection, filteredStandings.length > 0);
 
   if (!filteredStandings.length) {
-    elements.liveDriverStandingsBody.innerHTML =
-      '<tr><td colspan="4" class="empty-row">No live driver standings are available in the current session response.</td></tr>';
     return;
   }
 
@@ -1155,7 +1314,11 @@ function renderLiveDriverStandings(standings, driverByNumber, lookups) {
     .map((row) => {
       const driver = driverByNumber.get(row.driver_number) || {};
       const seasonDriver = lookups.seasonDrivers.get(row.driver_number);
-      const presentation = getDriverPresentation(driver, seasonDriver, lookups.teamLookup);
+      const presentation = getDriverPresentation(
+        driver,
+        seasonDriver,
+        lookups.teamLookup,
+      );
       return `
         <tr class="inspectable" data-inspect-type="driver" data-driver-number="${row.driver_number}">
           <td>${escapeHtml(row.position_current ?? "-")}</td>
@@ -1171,10 +1334,14 @@ function renderLiveDriverStandings(standings, driverByNumber, lookups) {
 function renderLiveTeamStandings(standings) {
   const filteredStandings = standings.filter((row) => isTeamVisible(row.team_name));
   elements.liveTeamStandingsCount.textContent = `${filteredStandings.length}`;
+  setSectionVisibility(elements.liveTeamStandingsSection, filteredStandings.length > 0);
+  setSectionVisibility(
+    elements.liveStandingsSection,
+    !elements.liveDriverStandingsSection.classList.contains("hidden") ||
+      filteredStandings.length > 0,
+  );
 
   if (!filteredStandings.length) {
-    elements.liveTeamStandingsBody.innerHTML =
-      '<tr><td colspan="4" class="empty-row">No live team standings are available in the current session response.</td></tr>';
     return;
   }
 
@@ -1187,7 +1354,9 @@ function renderLiveTeamStandings(standings) {
   elements.liveTeamStandingsBody.innerHTML = sorted
     .map(
       (row) => `
-        <tr class="inspectable" data-inspect-type="team" data-team-name="${escapeHtml(row.team_name || "")}">
+        <tr class="inspectable" data-inspect-type="team" data-team-name="${escapeHtml(
+          row.team_name || "",
+        )}">
           <td>${escapeHtml(row.position_current ?? "-")}</td>
           <td>${escapeHtml(row.team_name || "-")}</td>
           <td>${escapeHtml(row.points_start ?? "-")}</td>
@@ -1203,7 +1372,8 @@ function renderTeams(teamsResponse) {
   elements.teamsCount.textContent = `${teams.length}`;
 
   if (!teams.length) {
-    elements.teamsGrid.innerHTML = '<div class="placeholder-card">No teams loaded for this season.</div>';
+    elements.teamsGrid.innerHTML =
+      '<div class="placeholder-card">No teams loaded for this season.</div>';
     return;
   }
 
@@ -1211,13 +1381,17 @@ function renderTeams(teamsResponse) {
     .map((team) => {
       const logo = team.image
         ? `<img class="team-logo" src="${team.image}" alt="${escapeHtml(team.name)}" />`
-        : `<div class="team-logo fallback-avatar">${escapeHtml(team.teamCode || "TM")}</div>`;
+        : `<div class="team-logo fallback-avatar">${escapeHtml(
+            team.teamCode || "TM",
+          )}</div>`;
       const gradient =
         team.gradientStart && team.gradientEnd
           ? `background: linear-gradient(135deg, ${team.gradientStart}, ${team.gradientEnd});`
           : "";
       return `
-        <article class="team-card inspectable" data-inspect-type="team" data-team-name="${escapeHtml(team.name || "")}" style="${gradient}">
+        <article class="team-card inspectable" data-inspect-type="team" data-team-name="${escapeHtml(
+          team.name || "",
+        )}" style="${gradient}">
           ${logo}
           <div>
             <h3>${escapeHtml(team.name)}</h3>
@@ -1236,7 +1410,8 @@ function renderRaceWeekends(racesResponse) {
   elements.weekendsCount.textContent = `${response.totalRaces || races.length}`;
 
   if (!races.length) {
-    elements.weekendsGrid.innerHTML = '<div class="placeholder-card">No race weekends loaded.</div>';
+    elements.weekendsGrid.innerHTML =
+      '<div class="placeholder-card">No race weekends loaded.</div>';
     return;
   }
 
@@ -1252,8 +1427,12 @@ function renderRaceWeekends(racesResponse) {
         <article class="calendar-card inspectable ${active ? "active-weekend" : ""}" data-inspect-type="race" data-race-id="${race.id}">
           <span class="subtext">${escapeHtml(race.status || "scheduled")}</span>
           <h3>${escapeHtml(race.grandPrix)}</h3>
-          <div class="subtext inline-flag">${flag}<span>Round ${escapeHtml(race.roundNumber)} • ${escapeHtml(race.country)}</span></div>
-          <div class="subtext">${escapeHtml(race.circuit?.circuitName || race.location)}</div>
+          <div class="subtext inline-flag">${flag}<span>Round ${escapeHtml(
+            race.roundNumber,
+          )} • ${escapeHtml(race.country)}</span></div>
+          <div class="subtext">${escapeHtml(
+            race.circuit?.circuitName || race.location,
+          )}</div>
           <div class="subtext">${escapeHtml(formatDateTime(race.startDatetime))}</div>
         </article>
       `;
@@ -1268,23 +1447,35 @@ function renderCircuits(circuitsResponse, currentResponse) {
   elements.circuitsCount.textContent = `${response.totalCircuits || circuits.length}`;
 
   if (!circuits.length) {
-    elements.circuitsGrid.innerHTML = '<div class="placeholder-card">No circuits loaded.</div>';
+    elements.circuitsGrid.innerHTML =
+      '<div class="placeholder-card">No circuits loaded.</div>';
     return;
   }
 
   const prioritized = [...circuits].sort((left, right) => {
-    const leftMatch = left.circuitName?.toLowerCase().includes(currentCircuit.toLowerCase()) ? 1 : 0;
-    const rightMatch = right.circuitName?.toLowerCase().includes(currentCircuit.toLowerCase()) ? 1 : 0;
+    const leftMatch = left.circuitName
+      ?.toLowerCase()
+      .includes(currentCircuit.toLowerCase())
+      ? 1
+      : 0;
+    const rightMatch = right.circuitName
+      ?.toLowerCase()
+      .includes(currentCircuit.toLowerCase())
+      ? 1
+      : 0;
     return rightMatch - leftMatch;
   });
 
   elements.circuitsGrid.innerHTML = prioritized
-    .slice(0, 6)
+    .slice(0, 12)
     .map((circuit) => {
       const active =
         currentCircuit &&
         circuit.circuitName?.toLowerCase().includes(currentCircuit.toLowerCase());
-      const art = circuit.twoDImageUrl || circuit.threeDColorImageUrl || circuit.threeDPlaneImageUrl;
+      const art =
+        circuit.twoDImageUrl ||
+        circuit.threeDColorImageUrl ||
+        circuit.threeDPlaneImageUrl;
       const image = art
         ? `<img class="circuit-art" src="${art}" alt="${escapeHtml(circuit.circuitName)}" />`
         : `<div class="circuit-art"></div>`;
@@ -1294,8 +1485,16 @@ function renderCircuits(circuitsResponse, currentResponse) {
           ${image}
           <div>
             <h3>${escapeHtml(circuit.circuitName)}</h3>
-            <div class="subtext inline-flag">${flag}<span>${escapeHtml(circuit.city || "-")}, ${escapeHtml(circuit.country || "-")}</span></div>
-            <div class="subtext">${escapeHtml(circuit.lengthKm ? `${circuit.lengthKm} km` : "Length unavailable")} • ${escapeHtml(circuit.numberOfCorners ? `${circuit.numberOfCorners} corners` : "Corners unavailable")}</div>
+            <div class="subtext inline-flag">${flag}<span>${escapeHtml(
+              circuit.city || "-",
+            )}, ${escapeHtml(circuit.country || "-")}</span></div>
+            <div class="subtext">${escapeHtml(
+              circuit.lengthKm ? `${circuit.lengthKm} km` : "Length unavailable",
+            )} • ${escapeHtml(
+              circuit.numberOfCorners
+                ? `${circuit.numberOfCorners} corners`
+                : "Corners unavailable",
+            )}</div>
           </div>
         </article>
       `;
@@ -1329,12 +1528,14 @@ function renderDriverStandings(standingsResponse) {
   }
 
   elements.driverStandingsBody.innerHTML = standings
-    .slice(0, 12)
+    .slice(0, 20)
     .map(
       (row) => `
         <tr class="inspectable" data-inspect-type="driver" data-driver-number="${row.driverNumber || ""}" data-driver-code="${row.driverCode || ""}">
           <td>${escapeHtml(row.position ?? "-")}</td>
-          <td>${escapeHtml(row.driverName || [row.firstName, row.lastName].filter(Boolean).join(" ") || "-")}</td>
+          <td>${escapeHtml(
+            row.driverName || [row.firstName, row.lastName].filter(Boolean).join(" ") || "-",
+          )}</td>
           <td>${escapeHtml(row.teamName || "-")}</td>
           <td>${escapeHtml(row.points ?? "-")}</td>
         </tr>
@@ -1357,10 +1558,12 @@ function renderTeamStandings(standingsResponse) {
   }
 
   elements.teamStandingsBody.innerHTML = standings
-    .slice(0, 12)
+    .slice(0, 20)
     .map(
       (row) => `
-        <tr class="inspectable" data-inspect-type="team" data-team-name="${escapeHtml(row.constructorName || "")}">
+        <tr class="inspectable" data-inspect-type="team" data-team-name="${escapeHtml(
+          row.constructorName || "",
+        )}">
           <td>${escapeHtml(row.position ?? "-")}</td>
           <td>${escapeHtml(row.constructorName || "-")}</td>
           <td>${escapeHtml(row.teamCode || "-")}</td>
@@ -1377,7 +1580,8 @@ function renderCalendar(calendarResponse) {
   elements.calendarCount.textContent = `${response.totalRaces || races.length}`;
 
   if (!races.length) {
-    elements.calendarGrid.innerHTML = '<div class="placeholder-card">No races loaded for this season.</div>';
+    elements.calendarGrid.innerHTML =
+      '<div class="placeholder-card">No races loaded for this season.</div>';
     return;
   }
 
@@ -1392,9 +1596,13 @@ function renderCalendar(calendarResponse) {
         <article class="calendar-card inspectable ${active ? "active-weekend" : ""}" data-inspect-type="race" data-race-id="${race.id}">
           <span class="subtext">Round ${escapeHtml(race.roundNumber)}</span>
           <h3>${escapeHtml(race.grandPrix)}</h3>
-          <div class="subtext inline-flag">${flag}<span>${escapeHtml(race.location)}, ${escapeHtml(race.country)}</span></div>
+          <div class="subtext inline-flag">${flag}<span>${escapeHtml(
+            race.location,
+          )}, ${escapeHtml(race.country)}</span></div>
           <div class="subtext">${escapeHtml(formatDateTime(race.startDatetime))}</div>
-          <div class="subtext">${escapeHtml(race.isSprintWeekend ? "Sprint weekend" : "Grand prix weekend")}</div>
+          <div class="subtext">${escapeHtml(
+            race.isSprintWeekend ? "Sprint weekend" : "Grand prix weekend",
+          )}</div>
         </article>
       `;
     })
@@ -1414,7 +1622,9 @@ function showDriverInspector(driverNumberRaw, driverCodeRaw = "") {
     );
 
   if (!liveDriver && driverCodeRaw) {
-    liveDriver = (current.drivers || []).find((item) => item.name_acronym === driverCodeRaw) || null;
+    liveDriver =
+      (current.drivers || []).find((item) => item.name_acronym === driverCodeRaw) ||
+      null;
   }
 
   if (!liveDriver && !seasonDriver) {
@@ -1426,9 +1636,17 @@ function showDriverInspector(driverNumberRaw, driverCodeRaw = "") {
     return;
   }
 
-  const presentation = getDriverPresentation(liveDriver || {}, seasonDriver, appState.lookups.teamLookup);
-  const livePosition = (current.positions || []).find((item) => item.driver_number === driverNumber);
-  const interval = (current.intervals || []).find((item) => item.driver_number === driverNumber);
+  const presentation = getDriverPresentation(
+    liveDriver || {},
+    seasonDriver,
+    appState.lookups.teamLookup,
+  );
+  const livePosition = (current.positions || []).find(
+    (item) => item.driver_number === driverNumber,
+  );
+  const interval = (current.intervals || []).find(
+    (item) => item.driver_number === driverNumber,
+  );
   const standings =
     (appState.responses.driverStandings?.response?.standings || []).find(
       (item) =>
@@ -1438,8 +1656,13 @@ function showDriverInspector(driverNumberRaw, driverCodeRaw = "") {
     ) || {};
   const image = presentation.image
     ? `<img class="inspector-avatar" src="${presentation.image}" alt="${escapeHtml(presentation.name)}" />`
-    : `<div class="inspector-avatar fallback-avatar" style="background:${presentation.gradient}">${escapeHtml(presentation.code)}</div>`;
-  const flag = getFlagMarkup(presentation.nationality, presentation.nationality || presentation.name);
+    : `<div class="inspector-avatar fallback-avatar" style="background:${presentation.gradient}">${escapeHtml(
+        presentation.code,
+      )}</div>`;
+  const flag = getFlagMarkup(
+    presentation.nationality,
+    presentation.nationality || presentation.name,
+  );
 
   setInspector(
     presentation.name,
@@ -1449,7 +1672,9 @@ function showDriverInspector(driverNumberRaw, driverCodeRaw = "") {
         ${image}
         <div class="inspector-copy">
           <h3>${escapeHtml(presentation.name)}</h3>
-          <p class="inline-flag">${flag}<span>${escapeHtml(presentation.nationality || "Race Center driver detail")}</span></p>
+          <p class="inline-flag">${flag}<span>${escapeHtml(
+            presentation.nationality || "Race Center driver detail",
+          )}</span></p>
         </div>
       </div>
       ${renderInspectorFacts([
@@ -1476,7 +1701,8 @@ function showTeamInspector(teamNameRaw) {
   );
   const teamStanding =
     (appState.responses.teamStandings?.response?.standings || []).find(
-      (item) => normalizeTeamName(item.constructorName) === normalizeTeamName(teamName),
+      (item) =>
+        normalizeTeamName(item.constructorName) === normalizeTeamName(teamName),
     ) || {};
   const gradient =
     team?.gradientStart && team?.gradientEnd
@@ -1514,7 +1740,9 @@ function showTeamInspector(teamNameRaw) {
 function showRaceInspector(raceId) {
   const race =
     (appState.responses.races?.response?.races || []).find((item) => item.id === raceId) ||
-    (appState.responses.calendar?.response?.races || []).find((item) => item.id === raceId);
+    (appState.responses.calendar?.response?.races || []).find(
+      (item) => item.id === raceId,
+    );
   if (!race) {
     return;
   }
@@ -1543,7 +1771,8 @@ function showCircuitInspector(circuitId) {
     return;
   }
 
-  const art = circuit.twoDImageUrl || circuit.threeDColorImageUrl || circuit.threeDPlaneImageUrl;
+  const art =
+    circuit.twoDImageUrl || circuit.threeDColorImageUrl || circuit.threeDPlaneImageUrl;
   const image = art
     ? `<img class="inspector-avatar" src="${art}" alt="${escapeHtml(circuit.circuitName)}" />`
     : `<div class="inspector-avatar fallback-avatar">TRK</div>`;
@@ -1577,7 +1806,10 @@ async function loginUser() {
   const password = elements.loginPassword.value;
 
   if (!settings.loginIdentifier || !password) {
-    applyFeedback("Login identifier and password are required for user login.", "error");
+    applyAuthFeedback(
+      "Login identifier and password are required to open the Race Center.",
+      "error",
+    );
     return;
   }
 
@@ -1592,33 +1824,42 @@ async function loginUser() {
     });
     const accessToken = payload?.response?.accessToken;
     if (!accessToken) {
-      throw new Error("User login succeeded but no access token was returned.");
+      throw new Error("Login succeeded but no access token was returned.");
     }
     persistAccessToken(accessToken);
     elements.loginPassword.value = "";
     persistSettings();
-    applyFeedback("User login succeeded and the access token is stored for this browser session.", "success");
+    applyAuthFeedback("Signed in successfully. Loading your Race Center...", "success");
+    await loadDashboard();
   } catch (error) {
-    applyFeedback(error.message, "error");
+    applyAuthFeedback(error.message, "error");
   }
 }
 
 async function loadDashboard() {
   const settings = readSettings();
   if (!settings.accessToken) {
-    applyFeedback("Access token is required for Race Center calls.", "error");
+    showAuthView();
+    applyAuthFeedback("Sign in to load the Race Center.", "error");
     return;
   }
 
+  showDashboard();
   persistSettings();
   setLoadingState();
 
   try {
     const requests = [
       ["current", apiRequest("/api/v1/race-center/current")],
-      ["drivers", apiRequest("/api/v1/race-center/drivers", { query: { season: settings.season } })],
+      [
+        "drivers",
+        apiRequest("/api/v1/race-center/drivers", { query: { season: settings.season } }),
+      ],
       ["teams", apiRequest("/api/v1/race-center/teams", { query: { season: settings.season } })],
-      ["calendar", apiRequest("/api/v1/race-center/calendar", { query: { season: settings.season } })],
+      [
+        "calendar",
+        apiRequest("/api/v1/race-center/calendar", { query: { season: settings.season } }),
+      ],
       ["races", apiRequest("/api/v1/race-center/races", { query: { season: settings.season } })],
       ["circuits", apiRequest("/api/v1/race-center/circuits")],
       [
@@ -1663,7 +1904,8 @@ async function loadDashboard() {
       responses.teams && safeRender(renderTeams, responses.teams),
       responses.races && safeRender(renderRaceWeekends, responses.races),
       responses.circuits && safeRender(renderCircuits, responses.circuits, responses.current),
-      responses.driverStandings && safeRender(renderDriverStandings, responses.driverStandings),
+      responses.driverStandings &&
+        safeRender(renderDriverStandings, responses.driverStandings),
       responses.teamStandings && safeRender(renderTeamStandings, responses.teamStandings),
       responses.calendar && safeRender(renderCalendar, responses.calendar),
     ].filter(Boolean);
@@ -1703,22 +1945,36 @@ function configurePolling() {
   }, pollIntervalMs);
 }
 
+elements.loginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  loginUser().catch((error) => applyAuthFeedback(error.message, "error"));
+});
+
 elements.logoutButton.addEventListener("click", () => {
   clearAccessToken();
-  applyFeedback("Access token cleared from this browser session.", "success");
+  applyAuthFeedback("You have been signed out.", "success");
 });
 
 elements.loadButton.addEventListener("click", () => {
   loadDashboard().catch((error) => applyFeedback(error.message, "error"));
 });
 
-elements.loginUserButton.addEventListener("click", () => {
-  loginUser().catch((error) => applyFeedback(error.message, "error"));
-});
-
 elements.autoRefresh.addEventListener("change", () => {
   persistSettings();
   configurePolling();
+});
+
+elements.season.addEventListener("change", () => {
+  setSeasonValue(elements.season.value);
+  persistSettings();
+});
+
+elements.seasonToolbar.addEventListener("change", () => {
+  setSeasonValue(elements.seasonToolbar.value);
+  persistSettings();
+  if (elements.accessToken.value.trim()) {
+    loadDashboard().catch((error) => applyFeedback(error.message, "error"));
+  }
 });
 
 elements.tabButtons.forEach((button) => {

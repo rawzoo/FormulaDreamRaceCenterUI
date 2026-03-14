@@ -33,6 +33,87 @@ body {
     sans-serif;
 }
 
+#app,
+.app-shell {
+  min-height: 100vh;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.auth-view {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  overflow: hidden;
+}
+
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 95, 46, 0.18), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(0, 198, 198, 0.16), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+  pointer-events: none;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 24px;
+  padding: 28px;
+  background: rgba(7, 17, 31, 0.9);
+  border: 1px solid rgba(143, 186, 255, 0.18);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.auth-copy,
+.login-panel {
+  border-radius: 24px;
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-copy {
+  background:
+    radial-gradient(circle at top right, rgba(255, 95, 46, 0.14), transparent 35%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+}
+
+.login-panel {
+  background: rgba(3, 9, 18, 0.78);
+  display: grid;
+  gap: 16px;
+}
+
+.auth-highlights {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.auth-highlight {
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-view {
+  min-height: 100vh;
+}
+
 a {
   color: inherit;
 }
@@ -192,6 +273,14 @@ textarea {
   gap: 16px;
 }
 
+.toolbar-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 0.8fr 1.4fr 1fr;
+  gap: 16px;
+  align-items: end;
+}
+
 .auth-strip {
   min-height: 100%;
 }
@@ -295,6 +384,14 @@ select {
   min-height: 52px;
 }
 
+.toggle-card {
+  width: 100%;
+  padding: 0 16px;
+  border-radius: 16px;
+  background: rgba(3, 9, 18, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .feedback {
   margin: 18px 0 0;
 }
@@ -382,6 +479,26 @@ select {
   padding: 16px 18px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
+}
+
+.metric-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.metric-card {
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metric-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.2rem;
 }
 
 .hero-track {
@@ -506,6 +623,10 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
+.placeholder-card {
+  color: var(--muted);
+}
+
 .inspectable {
   cursor: pointer;
   transition:
@@ -527,6 +648,34 @@ select {
 
 .inspector-content {
   margin-top: 18px;
+}
+
+.feed-list {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.feed-item {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.feed-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.feed-message {
+  margin-top: 8px;
+  line-height: 1.55;
 }
 
 .inspector-grid {
@@ -701,13 +850,14 @@ select {
 }
 
 @media (max-width: 1100px) {
+  .auth-card,
   .hero,
   .split-grid,
   .weather-grid,
   .calendar-grid,
   .featured-grid,
   .inspector-grid,
-  .field-grid.compact,
+  .toolbar-grid,
   .filter-bar {
     grid-template-columns: 1fr;
   }
@@ -715,9 +865,27 @@ select {
   .session-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .metric-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 720px) {
+  .auth-view {
+    padding: 16px;
+  }
+
+  .auth-card {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .auth-copy,
+  .login-panel {
+    padding: 18px;
+  }
+
   .page-shell {
     padding: 18px 14px 40px;
   }
@@ -739,10 +907,16 @@ select {
   }
 
   .field-grid,
+  .toolbar-grid,
   .session-grid,
+  .metric-strip,
+  .weather-grid,
+  .calendar-grid,
+  .featured-grid,
   .roster-grid,
   .team-grid,
-  .circuits-grid {
+  .circuits-grid,
+  .inspector-grid {
     grid-template-columns: 1fr;
   }
 
