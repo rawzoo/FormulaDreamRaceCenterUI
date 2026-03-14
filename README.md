@@ -22,6 +22,7 @@ Copy `.env.example` to `.env.local` and set:
 ```bash
 VITE_API_BASE_URL=https://dev.formuladream.app/gaming-service
 VITE_DEFAULT_SEASON=2025
+BACKEND_API_BASE_URL=https://dev.formuladream.app/gaming-service
 ```
 
 ## Security choices
@@ -35,7 +36,7 @@ VITE_DEFAULT_SEASON=2025
 
 ## Backend requirements
 
-- The backend must allow CORS from the Vercel domain.
+- Browser traffic goes through the built-in Vercel proxy at `/api/backend/*`, so backend CORS is not required for the deployed UI.
 - The backend should keep auth on `https` only.
 - The frontend expects these backend APIs:
   - `/api/v1/users/login`
@@ -56,4 +57,5 @@ VITE_DEFAULT_SEASON=2025
 3. Add:
    - `VITE_API_BASE_URL`
    - `VITE_DEFAULT_SEASON`
+   - `BACKEND_API_BASE_URL`
 4. Deploy.

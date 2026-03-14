@@ -51,11 +51,6 @@ app.innerHTML = `
             <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" />
           </label>
 
-          <label class="field">
-            <span>Season</span>
-            <select id="season"></select>
-          </label>
-
           <button id="login-user" class="button primary" type="submit">Sign In</button>
           <p id="auth-feedback" class="feedback">Sign in to load your Race Center.</p>
         </form>
@@ -387,6 +382,7 @@ const defaultConfig = {
   defaultBaseUrl:
     import.meta.env.VITE_API_BASE_URL || "https://dev.formuladream.app/gaming-service",
   defaultSeason: import.meta.env.VITE_DEFAULT_SEASON || "2025",
+  proxyBaseUrl: "/api/backend",
 };
 
 const currentYear = new Date().getUTCFullYear();
@@ -402,7 +398,6 @@ const elements = {
   loginIdentifier: document.getElementById("login-identifier"),
   loginPassword: document.getElementById("login-password"),
   authFeedback: document.getElementById("auth-feedback"),
-  season: document.getElementById("season"),
   seasonToolbar: document.getElementById("season-toolbar"),
   accessToken: document.getElementById("access-token"),
   authStatusLabel: document.getElementById("auth-status-label"),
@@ -492,7 +487,7 @@ const appState = {
 
 function readSettings() {
   return {
-    season: elements.seasonToolbar.value.trim() || elements.season.value.trim(),
+    season: elements.seasonToolbar.value.trim(),
     accessToken: elements.accessToken.value.trim(),
     loginIdentifier: elements.loginIdentifier.value.trim(),
     autoRefresh: elements.autoRefresh.checked,
@@ -513,7 +508,6 @@ function persistSettings() {
 
 function setSeasonValue(value) {
   const season = String(value || defaultConfig.defaultSeason);
-  elements.season.value = season;
   elements.seasonToolbar.value = season;
 }
 
@@ -599,11 +593,6 @@ function loadDefaults() {
   const season = saved.season || defaultConfig.defaultSeason || String(currentYear);
 
   optionList(
-    elements.season,
-    seasonOptions.map((item) => ({ value: item, label: item })),
-    "Select season",
-  );
-  optionList(
     elements.seasonToolbar,
     seasonOptions.map((item) => ({ value: item, label: item })),
     "Select season",
@@ -646,12 +635,12 @@ async function apiRequest(path, { method = "GET", query, body, includeAuth = tru
       : `Bearer ${settings.accessToken}`;
   }
 
-  const response = await fetch(buildUrl(defaultConfig.defaultBaseUrl, path, query), {
+  const proxyPath = `${defaultConfig.proxyBaseUrl}${path}`;
+  const response = await fetch(buildUrl(window.location.origin, proxyPath, query), {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
-    mode: "cors",
-    credentials: "omit",
+    credentials: "same-origin",
   });
 
   const raw = await response.text();
@@ -1962,11 +1951,6 @@ elements.loadButton.addEventListener("click", () => {
 elements.autoRefresh.addEventListener("change", () => {
   persistSettings();
   configurePolling();
-});
-
-elements.season.addEventListener("change", () => {
-  setSeasonValue(elements.season.value);
-  persistSettings();
 });
 
 elements.seasonToolbar.addEventListener("change", () => {
