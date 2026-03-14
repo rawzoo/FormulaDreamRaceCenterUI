@@ -377,6 +377,7 @@ app.innerHTML = `
 
 const storageKey = "race-center-ui-settings";
 const tokenStorageKey = "race-center-ui-access-token";
+const refreshTokenStorageKey = "race-center-ui-refresh-token";
 const pollIntervalMs = 15000;
 const defaultConfig = {
   defaultBaseUrl:
@@ -511,15 +512,29 @@ function setSeasonValue(value) {
   elements.seasonToolbar.value = season;
 }
 
-function persistAccessToken(token) {
-  sessionStorage.setItem(tokenStorageKey, token);
-  elements.accessToken.value = token;
+function getStoredAccessToken() {
+  return localStorage.getItem(tokenStorageKey) || "";
+}
+
+function getStoredRefreshToken() {
+  return localStorage.getItem(refreshTokenStorageKey) || "";
+}
+
+function persistTokens(accessToken, refreshToken = "") {
+  if (accessToken) {
+    localStorage.setItem(tokenStorageKey, accessToken);
+    elements.accessToken.value = accessToken;
+  }
+  if (refreshToken) {
+    localStorage.setItem(refreshTokenStorageKey, refreshToken);
+  }
   updateAuthStatus();
   showDashboard();
 }
 
-function clearAccessToken() {
-  sessionStorage.removeItem(tokenStorageKey);
+function clearTokens() {
+  localStorage.removeItem(tokenStorageKey);
+  localStorage.removeItem(refreshTokenStorageKey);
   elements.accessToken.value = "";
   updateAuthStatus();
   showAuthView();
@@ -539,7 +554,7 @@ function updateAuthStatus() {
   const isSignedIn = Boolean(elements.accessToken.value.trim());
   elements.authStatusLabel.textContent = isSignedIn ? "Authenticated" : "Signed out";
   elements.authStatusDetail.textContent = isSignedIn
-    ? "Your Race Center session stays active only for this browser session."
+    ? "Your Race Center session stays signed in on this device."
     : "Sign in with your FormulaDream account to load Race Center data.";
   elements.authStatusPill.textContent = isSignedIn ? "Session active" : "No token";
   elements.authStatusPill.classList.toggle("is-active", isSignedIn);
@@ -589,7 +604,7 @@ function renderInspectorFacts(facts) {
 
 function loadDefaults() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
-  const accessToken = sessionStorage.getItem(tokenStorageKey) || "";
+  const accessToken = getStoredAccessToken();
   const season = saved.season || defaultConfig.defaultSeason || String(currentYear);
 
   optionList(
@@ -623,7 +638,51 @@ function buildUrl(baseUrl, path, query) {
   return url.toString();
 }
 
-async function apiRequest(path, { method = "GET", query, body, includeAuth = true } = {}) {
+async function refreshAccessToken() {
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) {
+    return "";
+  }
+
+  const proxyPath = `${defaultConfig.proxyBaseUrl}/api/v1/users/refresh-token`;
+  const response = await fetch(buildUrl(window.location.origin, proxyPath), {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: refreshToken.startsWith("Bearer ")
+        ? refreshToken
+        : `Bearer ${refreshToken}`,
+    },
+    credentials: "same-origin",
+  });
+
+  const raw = await response.text();
+  let payload = {};
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    throw new Error(raw || `Refresh failed with status ${response.status}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      payload.detail || payload.errorMessage || `Refresh failed with status ${response.status}`,
+    );
+  }
+
+  const accessToken = payload?.response?.accessToken;
+  const returnedRefreshToken = payload?.response?.refreshToken || refreshToken;
+  if (!accessToken) {
+    throw new Error("Refresh succeeded but no access token was returned.");
+  }
+  persistTokens(accessToken, returnedRefreshToken);
+  return accessToken;
+}
+
+async function apiRequest(
+  path,
+  { method = "GET", query, body, includeAuth = true, retryOnAuthFailure = true } = {},
+) {
   const settings = readSettings();
   const headers = { Accept: "application/json" };
   if (body !== undefined) {
@@ -649,6 +708,28 @@ async function apiRequest(path, { method = "GET", query, body, includeAuth = tru
     payload = JSON.parse(raw);
   } catch {
     throw new Error(raw || `Request failed with status ${response.status}`);
+  }
+
+  if (
+    response.status === 401 &&
+    includeAuth &&
+    retryOnAuthFailure &&
+    getStoredRefreshToken()
+  ) {
+    try {
+      const newAccessToken = await refreshAccessToken();
+      elements.accessToken.value = newAccessToken;
+      return await apiRequest(path, {
+        method,
+        query,
+        body,
+        includeAuth,
+        retryOnAuthFailure: false,
+      });
+    } catch (error) {
+      clearTokens();
+      throw error;
+    }
   }
 
   if (!response.ok) {
@@ -1812,10 +1893,11 @@ async function loginUser() {
       },
     });
     const accessToken = payload?.response?.accessToken;
+    const refreshToken = payload?.response?.refreshToken;
     if (!accessToken) {
       throw new Error("Login succeeded but no access token was returned.");
     }
-    persistAccessToken(accessToken);
+    persistTokens(accessToken, refreshToken);
     elements.loginPassword.value = "";
     persistSettings();
     applyAuthFeedback("Signed in successfully. Loading your Race Center...", "success");
@@ -1940,7 +2022,7 @@ elements.loginForm.addEventListener("submit", (event) => {
 });
 
 elements.logoutButton.addEventListener("click", () => {
-  clearAccessToken();
+  clearTokens();
   applyAuthFeedback("You have been signed out.", "success");
 });
 
@@ -2006,6 +2088,23 @@ document.addEventListener("click", (event) => {
 
 loadDefaults();
 configurePolling();
-if (elements.accessToken.value.trim()) {
-  loadDashboard().catch((error) => applyFeedback(error.message, "error"));
+
+async function bootstrapSession() {
+  if (elements.accessToken.value.trim()) {
+    await loadDashboard();
+    return;
+  }
+
+  if (getStoredRefreshToken()) {
+    try {
+      await refreshAccessToken();
+      await loadDashboard();
+      return;
+    } catch (error) {
+      clearTokens();
+      applyAuthFeedback("Your saved session expired. Please sign in again.", "error");
+    }
+  }
 }
+
+bootstrapSession().catch((error) => applyFeedback(error.message, "error"));
