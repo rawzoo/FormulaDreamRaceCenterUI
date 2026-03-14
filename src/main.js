@@ -48,10 +48,17 @@ app.innerHTML = `
           <span>Season</span>
           <input id="season" type="number" min="2023" max="2100" />
         </label>
-        <label class="field field-wide">
-          <span>Access Token</span>
-          <textarea id="access-token" rows="2" placeholder="JWT will appear here after login"></textarea>
-        </label>
+        <div class="field field-wide auth-strip">
+          <span>Authentication</span>
+          <div class="auth-status-card">
+            <div>
+              <strong id="auth-status-label">Signed out</strong>
+              <div class="subtext" id="auth-status-detail">Log in with your FormulaDream account to load Race Center data.</div>
+            </div>
+            <div class="auth-status-pill" id="auth-status-pill">No token</div>
+          </div>
+          <input id="access-token" type="hidden" />
+        </div>
       </div>
 
       <div class="filter-bar">
@@ -140,7 +147,14 @@ app.innerHTML = `
       </div>
     </section>
 
+    <nav class="section-tabs" aria-label="Race Center sections">
+      <button class="tab-button is-active" data-tab-target="live">Live</button>
+      <button class="tab-button" data-tab-target="season">Season</button>
+      <button class="tab-button" data-tab-target="circuits">Circuits</button>
+    </nav>
+
     <main class="dashboard">
+      <section class="tab-panel is-active" data-tab-panel="live">
       <section class="card session-card">
         <div class="card-header">
           <div>
@@ -264,7 +278,9 @@ app.innerHTML = `
           </div>
         </section>
       </section>
+      </section>
 
+      <section class="tab-panel" data-tab-panel="season">
       <section class="split-grid">
         <section class="card">
           <div class="card-header">
@@ -306,7 +322,9 @@ app.innerHTML = `
           </div>
         </section>
       </section>
+      </section>
 
+      <section class="tab-panel" data-tab-panel="circuits">
       <section class="split-grid">
         <section class="card">
           <div class="card-header">
@@ -350,7 +368,20 @@ app.innerHTML = `
           </div>
         </section>
       </section>
+      </section>
     </main>
+
+    <nav class="mobile-bottom-nav" aria-label="Race Center mobile navigation">
+      <button class="mobile-nav-button is-active" data-tab-target="live">
+        <span>Live</span>
+      </button>
+      <button class="mobile-nav-button" data-tab-target="season">
+        <span>Season</span>
+      </button>
+      <button class="mobile-nav-button" data-tab-target="circuits">
+        <span>Circuits</span>
+      </button>
+    </nav>
   </div>
 `;
 
@@ -366,6 +397,9 @@ const elements = {
   baseUrl: document.getElementById("base-url"),
   season: document.getElementById("season"),
   accessToken: document.getElementById("access-token"),
+  authStatusLabel: document.getElementById("auth-status-label"),
+  authStatusDetail: document.getElementById("auth-status-detail"),
+  authStatusPill: document.getElementById("auth-status-pill"),
   loginIdentifier: document.getElementById("login-identifier"),
   loginPassword: document.getElementById("login-password"),
   botUsername: document.getElementById("bot-username"),
@@ -381,6 +415,8 @@ const elements = {
   teamFilter: document.getElementById("team-filter"),
   resetFiltersButton: document.getElementById("reset-filters"),
   selectionPill: document.getElementById("selection-pill"),
+  tabButtons: Array.from(document.querySelectorAll("[data-tab-target]")),
+  tabPanels: Array.from(document.querySelectorAll("[data-tab-panel]")),
   inspectorTitle: document.getElementById("inspector-title"),
   inspectorSubtitle: document.getElementById("inspector-subtitle"),
   inspectorContent: document.getElementById("inspector-content"),
@@ -436,6 +472,7 @@ const appState = {
     driverNumber: "",
     teamName: "",
   },
+  currentTab: "live",
 };
 
 function readSettings() {
@@ -467,11 +504,23 @@ function persistSettings() {
 function persistAccessToken(token) {
   sessionStorage.setItem(tokenStorageKey, token);
   elements.accessToken.value = token;
+  updateAuthStatus();
 }
 
 function clearAccessToken() {
   sessionStorage.removeItem(tokenStorageKey);
   elements.accessToken.value = "";
+  updateAuthStatus();
+}
+
+function updateAuthStatus() {
+  const isSignedIn = Boolean(elements.accessToken.value.trim());
+  elements.authStatusLabel.textContent = isSignedIn ? "Authenticated" : "Signed out";
+  elements.authStatusDetail.textContent = isSignedIn
+    ? "Your session token is stored only for this browser session."
+    : "Log in with your FormulaDream account to load Race Center data.";
+  elements.authStatusPill.textContent = isSignedIn ? "Session active" : "No token";
+  elements.authStatusPill.classList.toggle("is-active", isSignedIn);
 }
 
 function escapeHtml(value) {
@@ -523,6 +572,8 @@ function loadDefaults() {
   elements.botToken.value = "";
   elements.autoRefresh.checked = saved.autoRefresh || false;
   elements.statusRefresh.textContent = elements.autoRefresh.checked ? "Every 15s" : "Manual";
+  updateAuthStatus();
+  setActiveTab(appState.currentTab);
 }
 
 function buildUrl(baseUrl, path, query) {
@@ -777,6 +828,16 @@ function syncFilterControls() {
   updateSelectionPill();
 }
 
+function setActiveTab(tabName) {
+  appState.currentTab = tabName;
+  elements.tabButtons.forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.tabTarget === tabName);
+  });
+  elements.tabPanels.forEach((panel) => {
+    panel.classList.toggle("is-active", panel.dataset.tabPanel === tabName);
+  });
+}
+
 function populateFilters() {
   const driverItems = (appState.responses.drivers?.response?.drivers || [])
     .map((driver) => ({
@@ -796,10 +857,56 @@ function populateFilters() {
 function setLoadingState() {
   elements.loadButton.disabled = true;
   applyFeedback("Loading Race Center data...");
+  renderLoadingSkeletons();
 }
 
 function clearLoadingState() {
   elements.loadButton.disabled = false;
+}
+
+function skeletonCard(count = 1) {
+  return Array.from({ length: count })
+    .map(
+      () => `
+        <div class="skeleton-card">
+          <div class="skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-line--medium"></div>
+        </div>
+      `,
+    )
+    .join("");
+}
+
+function skeletonRows(columns = 4, rows = 4) {
+  return Array.from({ length: rows })
+    .map(
+      () => `
+        <tr>
+          <td colspan="${columns}">
+            <div class="skeleton-line"></div>
+          </td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
+function renderLoadingSkeletons() {
+  elements.featuredGrid.innerHTML = skeletonCard(3);
+  elements.weatherGrid.innerHTML = skeletonCard(6);
+  elements.raceControlFeed.innerHTML = skeletonCard(4);
+  elements.liveDriversGrid.innerHTML = skeletonCard(6);
+  elements.driversGrid.innerHTML = skeletonCard(6);
+  elements.teamsGrid.innerHTML = skeletonCard(6);
+  elements.calendarGrid.innerHTML = skeletonCard(6);
+  elements.weekendsGrid.innerHTML = skeletonCard(6);
+  elements.circuitsGrid.innerHTML = skeletonCard(4);
+  elements.leaderboardBody.innerHTML = skeletonRows(4, 6);
+  elements.liveDriverStandingsBody.innerHTML = skeletonRows(4, 4);
+  elements.liveTeamStandingsBody.innerHTML = skeletonRows(4, 4);
+  elements.driverStandingsBody.innerHTML = skeletonRows(4, 4);
+  elements.teamStandingsBody.innerHTML = skeletonRows(4, 4);
 }
 
 function safeRender(renderFn, ...args) {
@@ -1693,6 +1800,12 @@ elements.loginUserButton.addEventListener("click", () => {
 elements.autoRefresh.addEventListener("change", () => {
   persistSettings();
   configurePolling();
+});
+
+elements.tabButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveTab(button.dataset.tabTarget);
+  });
 });
 
 elements.driverFilter.addEventListener("change", () => {
