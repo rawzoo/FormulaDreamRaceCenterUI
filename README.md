@@ -36,7 +36,7 @@ BACKEND_API_BASE_URL=https://dev.formuladream.app/gaming-service
 
 ## Backend requirements
 
-- Browser traffic goes through the built-in Vercel proxy at `/api/backend/*`, so backend CORS is not required for the deployed UI.
+- Browser traffic goes through the built-in Vercel proxy at `/api/proxy?path=...`, so backend CORS is not required for the deployed UI.
 - The backend should keep auth on `https` only.
 - The frontend expects these backend APIs:
   - `/api/v1/users/login`

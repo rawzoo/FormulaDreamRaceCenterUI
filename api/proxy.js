@@ -3,18 +3,20 @@ export default async function handler(req, res) {
     process.env.BACKEND_API_BASE_URL || process.env.VITE_API_BASE_URL;
 
   if (!baseUrl) {
-    res.status(500).json({
-      error: "BACKEND_API_BASE_URL is not configured",
-    });
+    res.status(500).json({ error: "BACKEND_API_BASE_URL is not configured" });
     return;
   }
 
-  const pathParts = Array.isArray(req.query.path)
-    ? req.query.path
-    : [req.query.path].filter(Boolean);
-  const upstreamUrl = new URL(
-    `${baseUrl.replace(/\/$/, "")}/${pathParts.map(encodeURIComponent).join("/")}`,
-  );
+  const targetPath = req.query.path;
+  if (!targetPath) {
+    res.status(400).json({ error: "Missing path query parameter" });
+    return;
+  }
+
+  const normalizedPath = String(targetPath).startsWith("/")
+    ? String(targetPath)
+    : `/${String(targetPath)}`;
+  const upstreamUrl = new URL(`${baseUrl.replace(/\/$/, "")}${normalizedPath}`);
 
   for (const [key, value] of Object.entries(req.query)) {
     if (key === "path") {
@@ -45,9 +47,8 @@ export default async function handler(req, res) {
   };
 
   if (!["GET", "HEAD"].includes(req.method)) {
-    const rawBody =
+    requestInit.body =
       typeof req.body === "string" ? req.body : JSON.stringify(req.body ?? {});
-    requestInit.body = rawBody;
   }
 
   try {

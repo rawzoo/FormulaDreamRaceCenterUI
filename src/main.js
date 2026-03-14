@@ -383,7 +383,7 @@ const defaultConfig = {
   defaultBaseUrl:
     import.meta.env.VITE_API_BASE_URL || "https://dev.formuladream.app/gaming-service",
   defaultSeason: import.meta.env.VITE_DEFAULT_SEASON || "2025",
-  proxyBaseUrl: "/api/backend",
+  proxyBaseUrl: "/api/proxy",
 };
 
 const currentYear = new Date().getUTCFullYear();
@@ -638,23 +638,32 @@ function buildUrl(baseUrl, path, query) {
   return url.toString();
 }
 
+function buildProxyQuery(path, query) {
+  return {
+    path,
+    ...(query || {}),
+  };
+}
+
 async function refreshAccessToken() {
   const refreshToken = getStoredRefreshToken();
   if (!refreshToken) {
     return "";
   }
 
-  const proxyPath = `${defaultConfig.proxyBaseUrl}/api/v1/users/refresh-token`;
-  const response = await fetch(buildUrl(window.location.origin, proxyPath), {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      Authorization: refreshToken.startsWith("Bearer ")
-        ? refreshToken
-        : `Bearer ${refreshToken}`,
+  const response = await fetch(
+    buildUrl(window.location.origin, defaultConfig.proxyBaseUrl, buildProxyQuery("/api/v1/users/refresh-token")),
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        Authorization: refreshToken.startsWith("Bearer ")
+          ? refreshToken
+          : `Bearer ${refreshToken}`,
+      },
+      credentials: "same-origin",
     },
-    credentials: "same-origin",
-  });
+  );
 
   const raw = await response.text();
   let payload = {};
@@ -694,13 +703,15 @@ async function apiRequest(
       : `Bearer ${settings.accessToken}`;
   }
 
-  const proxyPath = `${defaultConfig.proxyBaseUrl}${path}`;
-  const response = await fetch(buildUrl(window.location.origin, proxyPath, query), {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    credentials: "same-origin",
-  });
+  const response = await fetch(
+    buildUrl(window.location.origin, defaultConfig.proxyBaseUrl, buildProxyQuery(path, query)),
+    {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      credentials: "same-origin",
+    },
+  );
 
   const raw = await response.text();
   let payload = {};
