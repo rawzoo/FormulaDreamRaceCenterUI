@@ -95,6 +95,41 @@ body {
   gap: 16px;
 }
 
+.input-with-prefix {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.prefix-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: 16px;
+  background: rgba(255, 95, 46, 0.12);
+  border: 1px solid rgba(255, 95, 46, 0.24);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.remember-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
 .auth-highlights {
   display: grid;
   gap: 14px;
@@ -276,7 +311,7 @@ textarea {
 .toolbar-grid {
   margin-top: 20px;
   display: grid;
-  grid-template-columns: 0.8fr 1.4fr 1fr;
+  grid-template-columns: minmax(200px, 280px) minmax(220px, 320px);
   gap: 16px;
   align-items: end;
 }
@@ -462,6 +497,7 @@ select {
 
 .card {
   padding: 24px;
+  animation: rise-in 280ms ease;
 }
 
 .session-grid,
@@ -596,18 +632,18 @@ select {
 }
 
 .weather-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .roster-grid,
 .team-grid,
 .circuits-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 }
 
 .calendar-grid,
 .featured-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .placeholder-card,
@@ -710,12 +746,41 @@ select {
   grid-template-columns: auto 1fr;
   gap: 14px;
   align-items: center;
+  min-height: 132px;
 }
 
 .driver-card {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02)),
     rgba(255, 255, 255, 0.04);
+}
+
+.driver-card > div,
+.team-card > div,
+.calendar-card > div,
+.circuit-card > div,
+.featured-card > div {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(3, 9, 18, 0.34);
+  backdrop-filter: blur(10px);
+}
+
+.driver-card h3,
+.team-card h3,
+.calendar-card h3,
+.circuit-card h3,
+.featured-card h3 {
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.driver-card .subtext,
+.team-card .subtext,
+.calendar-card .subtext,
+.circuit-card .subtext,
+.featured-card .subtext {
+  color: rgba(237, 243, 255, 0.88);
 }
 
 .featured-card {
@@ -802,9 +867,68 @@ select {
   width: 68%;
 }
 
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
+  }
+}
+
+.detail-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 440px);
+}
+
+.detail-backdrop {
+  border: 0;
+  background: rgba(2, 7, 17, 0.56);
+  backdrop-filter: blur(6px);
+}
+
+.detail-panel {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 95, 46, 0.16), transparent 26%),
+    linear-gradient(180deg, rgba(7, 17, 31, 0.98), rgba(7, 17, 31, 0.96));
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: -22px 0 50px rgba(0, 0, 0, 0.35);
+  animation: slide-in 240ms ease;
+}
+
+.detail-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.detail-close {
+  flex-shrink: 0;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
@@ -892,7 +1016,6 @@ select {
 
   .hero,
   .control-panel,
-  .inspector-card,
   .card {
     padding: 18px;
     border-radius: 20px;
@@ -930,5 +1053,18 @@ select {
 
   .field-wide {
     grid-column: auto;
+  }
+
+  .detail-drawer {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-backdrop {
+    display: none;
+  }
+
+  .detail-panel {
+    border-left: 0;
+    padding: 18px 16px 120px;
   }
 }

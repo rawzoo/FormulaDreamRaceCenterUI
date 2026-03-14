@@ -43,12 +43,21 @@ app.innerHTML = `
 
           <label class="field">
             <span>Login Identifier</span>
-            <input id="login-identifier" type="text" placeholder="+91..., email, or username" autocomplete="username" />
+            <div class="input-with-prefix">
+              <span class="prefix-pill">+91</span>
+              <input id="login-identifier" type="text" placeholder="Mobile, email, or username" autocomplete="username" />
+            </div>
+            <small class="subtext">For Indian mobile numbers, entering 10 digits will automatically use <code>+91</code>.</small>
           </label>
 
           <label class="field">
             <span>Password</span>
             <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" />
+          </label>
+
+          <label class="remember-row" for="remember-login">
+            <input id="remember-login" type="checkbox" checked />
+            <span>Keep me signed in on this device</span>
           </label>
 
           <button id="login-user" class="button primary" type="submit">Sign In</button>
@@ -103,18 +112,6 @@ app.innerHTML = `
               <select id="season-toolbar"></select>
             </label>
 
-            <div class="field auth-strip">
-              <span>Authentication</span>
-              <div class="auth-status-card">
-                <div>
-                  <strong id="auth-status-label">Authenticated</strong>
-                  <div class="subtext" id="auth-status-detail">Your session is active for this browser session.</div>
-                </div>
-                <div class="auth-status-pill is-active" id="auth-status-pill">Session active</div>
-              </div>
-              <input id="access-token" type="hidden" />
-            </div>
-
             <label class="field">
               <span>Auto Refresh</span>
               <label class="toggle toggle-card">
@@ -123,6 +120,8 @@ app.innerHTML = `
               </label>
             </label>
           </div>
+
+          <input id="access-token" type="hidden" />
 
           <div class="filter-bar">
             <label class="field">
@@ -349,22 +348,6 @@ app.innerHTML = `
           </section>
         </main>
 
-        <section class="card inspector-card">
-          <div class="card-header">
-            <div>
-              <p class="eyebrow">Inspector</p>
-              <h2 id="inspector-title">Tap a driver, team, circuit, or weekend card</h2>
-            </div>
-            <span class="counter" id="inspector-subtitle">Interactive details</span>
-          </div>
-          <div id="inspector-content" class="inspector-content">
-            <div class="placeholder-card">
-              The inspector updates as you explore the live leaderboard, season rosters,
-              weekend cards, and circuits.
-            </div>
-          </div>
-        </section>
-
         <nav class="mobile-bottom-nav" aria-label="Race Center mobile navigation">
           <button class="mobile-nav-button is-active" data-tab-target="live"><span>Live</span></button>
           <button class="mobile-nav-button" data-tab-target="season"><span>Season</span></button>
@@ -372,12 +355,33 @@ app.innerHTML = `
         </nav>
       </div>
     </section>
+
+    <section id="detail-drawer" class="detail-drawer hidden" aria-hidden="true">
+      <button id="detail-backdrop" class="detail-backdrop" aria-label="Close details"></button>
+      <aside class="detail-panel" aria-live="polite">
+        <div class="detail-panel-header">
+          <div>
+            <p class="eyebrow">Inspector</p>
+            <h2 id="inspector-title">Tap a driver, team, circuit, or weekend card</h2>
+            <p class="subtext" id="inspector-subtitle">Interactive details</p>
+          </div>
+          <button id="detail-close" class="button ghost detail-close" type="button">Close</button>
+        </div>
+        <div id="inspector-content" class="inspector-content">
+          <div class="placeholder-card">
+            The inspector opens as you explore the live leaderboard, season rosters,
+            weekend cards, and circuits.
+          </div>
+        </div>
+      </aside>
+    </section>
   </div>
 `;
 
 const storageKey = "race-center-ui-settings";
 const tokenStorageKey = "race-center-ui-access-token";
 const refreshTokenStorageKey = "race-center-ui-refresh-token";
+const rememberLoginStorageKey = "race-center-ui-remember-login";
 const pollIntervalMs = 15000;
 const defaultConfig = {
   defaultBaseUrl:
@@ -398,12 +402,10 @@ const elements = {
   loginForm: document.getElementById("login-form"),
   loginIdentifier: document.getElementById("login-identifier"),
   loginPassword: document.getElementById("login-password"),
+  rememberLogin: document.getElementById("remember-login"),
   authFeedback: document.getElementById("auth-feedback"),
   seasonToolbar: document.getElementById("season-toolbar"),
   accessToken: document.getElementById("access-token"),
-  authStatusLabel: document.getElementById("auth-status-label"),
-  authStatusDetail: document.getElementById("auth-status-detail"),
-  authStatusPill: document.getElementById("auth-status-pill"),
   autoRefresh: document.getElementById("auto-refresh"),
   feedback: document.getElementById("feedback"),
   loadButton: document.getElementById("load-dashboard"),
@@ -422,7 +424,9 @@ const elements = {
   liveStandingsSection: document.getElementById("live-standings-section"),
   liveDriverStandingsSection: document.getElementById("live-driver-standings-section"),
   liveTeamStandingsSection: document.getElementById("live-team-standings-section"),
-  seasonStandingsSection: document.getElementById("season-standings-section"),
+  detailDrawer: document.getElementById("detail-drawer"),
+  detailBackdrop: document.getElementById("detail-backdrop"),
+  detailClose: document.getElementById("detail-close"),
   inspectorTitle: document.getElementById("inspector-title"),
   inspectorSubtitle: document.getElementById("inspector-subtitle"),
   inspectorContent: document.getElementById("inspector-content"),
@@ -492,6 +496,7 @@ function readSettings() {
     accessToken: elements.accessToken.value.trim(),
     loginIdentifier: elements.loginIdentifier.value.trim(),
     autoRefresh: elements.autoRefresh.checked,
+    rememberLogin: elements.rememberLogin.checked,
   };
 }
 
@@ -501,10 +506,11 @@ function persistSettings() {
     storageKey,
     JSON.stringify({
       season: settings.season,
-      loginIdentifier: settings.loginIdentifier,
+      loginIdentifier: settings.rememberLogin ? settings.loginIdentifier : "",
       autoRefresh: settings.autoRefresh,
     }),
   );
+  localStorage.setItem(rememberLoginStorageKey, String(settings.rememberLogin));
 }
 
 function setSeasonValue(value) {
@@ -513,20 +519,31 @@ function setSeasonValue(value) {
 }
 
 function getStoredAccessToken() {
-  return localStorage.getItem(tokenStorageKey) || "";
+  return sessionStorage.getItem(tokenStorageKey) || localStorage.getItem(tokenStorageKey) || "";
 }
 
 function getStoredRefreshToken() {
-  return localStorage.getItem(refreshTokenStorageKey) || "";
+  return (
+    sessionStorage.getItem(refreshTokenStorageKey) ||
+    localStorage.getItem(refreshTokenStorageKey) ||
+    ""
+  );
 }
 
-function persistTokens(accessToken, refreshToken = "") {
+function persistTokens(accessToken, refreshToken = "", rememberLogin = true) {
+  const primaryStorage = rememberLogin ? localStorage : sessionStorage;
+  const secondaryStorage = rememberLogin ? sessionStorage : localStorage;
+
+  secondaryStorage.removeItem(tokenStorageKey);
+  secondaryStorage.removeItem(refreshTokenStorageKey);
+  localStorage.setItem(rememberLoginStorageKey, String(rememberLogin));
+
   if (accessToken) {
-    localStorage.setItem(tokenStorageKey, accessToken);
+    primaryStorage.setItem(tokenStorageKey, accessToken);
     elements.accessToken.value = accessToken;
   }
   if (refreshToken) {
-    localStorage.setItem(refreshTokenStorageKey, refreshToken);
+    primaryStorage.setItem(refreshTokenStorageKey, refreshToken);
   }
   updateAuthStatus();
   showDashboard();
@@ -535,6 +552,8 @@ function persistTokens(accessToken, refreshToken = "") {
 function clearTokens() {
   localStorage.removeItem(tokenStorageKey);
   localStorage.removeItem(refreshTokenStorageKey);
+  sessionStorage.removeItem(tokenStorageKey);
+  sessionStorage.removeItem(refreshTokenStorageKey);
   elements.accessToken.value = "";
   updateAuthStatus();
   showAuthView();
@@ -552,12 +571,7 @@ function showDashboard() {
 
 function updateAuthStatus() {
   const isSignedIn = Boolean(elements.accessToken.value.trim());
-  elements.authStatusLabel.textContent = isSignedIn ? "Authenticated" : "Signed out";
-  elements.authStatusDetail.textContent = isSignedIn
-    ? "Your Race Center session stays signed in on this device."
-    : "Sign in with your FormulaDream account to load Race Center data.";
-  elements.authStatusPill.textContent = isSignedIn ? "Session active" : "No token";
-  elements.authStatusPill.classList.toggle("is-active", isSignedIn);
+  elements.logoutButton?.classList.toggle("hidden", !isSignedIn);
 }
 
 function escapeHtml(value) {
@@ -583,6 +597,13 @@ function setInspector(title, subtitle, html) {
   elements.inspectorTitle.textContent = title;
   elements.inspectorSubtitle.textContent = subtitle;
   elements.inspectorContent.innerHTML = html;
+  elements.detailDrawer.classList.remove("hidden");
+  elements.detailDrawer.setAttribute("aria-hidden", "false");
+}
+
+function closeInspector() {
+  elements.detailDrawer.classList.add("hidden");
+  elements.detailDrawer.setAttribute("aria-hidden", "true");
 }
 
 function renderInspectorFacts(facts) {
@@ -606,6 +627,7 @@ function loadDefaults() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
   const accessToken = getStoredAccessToken();
   const season = saved.season || defaultConfig.defaultSeason || String(currentYear);
+  const rememberLogin = localStorage.getItem(rememberLoginStorageKey) !== "false";
 
   optionList(
     elements.seasonToolbar,
@@ -615,6 +637,7 @@ function loadDefaults() {
   setSeasonValue(season);
   elements.accessToken.value = accessToken;
   elements.loginIdentifier.value = saved.loginIdentifier || "";
+  elements.rememberLogin.checked = rememberLogin;
   elements.autoRefresh.checked = Boolean(saved.autoRefresh);
   elements.statusRefresh.textContent = elements.autoRefresh.checked ? "Every 15s" : "Manual";
   updateAuthStatus();
@@ -624,6 +647,21 @@ function loadDefaults() {
   } else {
     showAuthView();
   }
+}
+
+function normalizeLoginIdentifier(value) {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes("@") || /[a-z]/i.test(trimmed)) {
+    return trimmed;
+  }
+  const digits = trimmed.replace(/[^\d]/g, "");
+  if (digits.length === 10) {
+    return `+91${digits}`;
+  }
+  if (digits.length === 12 && digits.startsWith("91")) {
+    return `+${digits}`;
+  }
+  return trimmed;
 }
 
 function buildUrl(baseUrl, path, query) {
@@ -684,7 +722,11 @@ async function refreshAccessToken() {
   if (!accessToken) {
     throw new Error("Refresh succeeded but no access token was returned.");
   }
-  persistTokens(accessToken, returnedRefreshToken);
+  persistTokens(
+    accessToken,
+    returnedRefreshToken,
+    localStorage.getItem(rememberLoginStorageKey) !== "false",
+  );
   return accessToken;
 }
 
@@ -1885,8 +1927,9 @@ function showCircuitInspector(circuitId) {
 async function loginUser() {
   const settings = readSettings();
   const password = elements.loginPassword.value;
+  const normalizedLoginIdentifier = normalizeLoginIdentifier(settings.loginIdentifier);
 
-  if (!settings.loginIdentifier || !password) {
+  if (!normalizedLoginIdentifier || !password) {
     applyAuthFeedback(
       "Login identifier and password are required to open the Race Center.",
       "error",
@@ -1899,7 +1942,7 @@ async function loginUser() {
       method: "POST",
       includeAuth: false,
       body: {
-        loginIdentifier: settings.loginIdentifier,
+        loginIdentifier: normalizedLoginIdentifier,
         password,
       },
     });
@@ -1908,7 +1951,8 @@ async function loginUser() {
     if (!accessToken) {
       throw new Error("Login succeeded but no access token was returned.");
     }
-    persistTokens(accessToken, refreshToken);
+    elements.loginIdentifier.value = normalizedLoginIdentifier;
+    persistTokens(accessToken, refreshToken, settings.rememberLogin);
     elements.loginPassword.value = "";
     persistSettings();
     applyAuthFeedback("Signed in successfully. Loading your Race Center...", "success");
@@ -2037,6 +2081,14 @@ elements.logoutButton.addEventListener("click", () => {
   applyAuthFeedback("You have been signed out.", "success");
 });
 
+elements.detailBackdrop.addEventListener("click", () => {
+  closeInspector();
+});
+
+elements.detailClose.addEventListener("click", () => {
+  closeInspector();
+});
+
 elements.loadButton.addEventListener("click", () => {
   loadDashboard().catch((error) => applyFeedback(error.message, "error"));
 });
@@ -2094,6 +2146,12 @@ document.addEventListener("click", (event) => {
     showRaceInspector(target.dataset.raceId);
   } else if (type === "circuit") {
     showCircuitInspector(target.dataset.circuitId);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !elements.detailDrawer.classList.contains("hidden")) {
+    closeInspector();
   }
 });
 
