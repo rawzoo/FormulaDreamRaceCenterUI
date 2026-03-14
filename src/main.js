@@ -7,20 +7,20 @@ app.innerHTML = `
     <header class="hero">
       <div class="hero-copy">
         <p class="eyebrow">FormulaDream</p>
-        <h1>Race Center</h1>
+        <h1>FormulaDream F1 Race Center</h1>
         <p class="hero-text">
-          A production-ready standalone frontend for live Formula 1 session data,
-          season standings, race weekends, and circuit views powered by the
-          FormulaDream backend Race Center APIs.
+          Follow live Formula 1 action, explore season standings, inspect every
+          driver and circuit, and stay on top of each weekend from one polished
+          Race Center experience.
         </p>
       </div>
       <div class="hero-status">
         <div class="status-chip">
-          <span class="status-label">API Mode</span>
+          <span class="status-label">Race Feed</span>
           <strong id="status-source">Waiting</strong>
         </div>
         <div class="status-chip">
-          <span class="status-label">Refresh</span>
+          <span class="status-label">Live Refresh</span>
           <strong id="status-refresh">Manual</strong>
         </div>
       </div>
@@ -29,21 +29,16 @@ app.innerHTML = `
     <section class="control-panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">Connection</p>
-          <h2>Backend Settings</h2>
+          <p class="eyebrow">Welcome</p>
+          <h2>Sign In And Personalize</h2>
         </div>
         <div class="action-row">
-          <button id="save-settings" class="button secondary">Save</button>
           <button id="logout-button" class="button ghost">Logout</button>
-          <button id="load-dashboard" class="button primary">Load Race Center</button>
+          <button id="load-dashboard" class="button primary">Refresh Race Center</button>
         </div>
       </div>
 
       <div class="field-grid">
-        <label class="field">
-          <span>Backend Base URL</span>
-          <input id="base-url" type="url" placeholder="https://dev.formuladream.app/gaming-service" />
-        </label>
         <label class="field">
           <span>Season</span>
           <input id="season" type="number" min="2023" max="2100" />
@@ -53,7 +48,7 @@ app.innerHTML = `
           <div class="auth-status-card">
             <div>
               <strong id="auth-status-label">Signed out</strong>
-              <div class="subtext" id="auth-status-detail">Log in with your FormulaDream account to load Race Center data.</div>
+              <div class="subtext" id="auth-status-detail">Log in with your FormulaDream account to open your Race Center session.</div>
             </div>
             <div class="auth-status-pill" id="auth-status-pill">No token</div>
           </div>
@@ -75,15 +70,15 @@ app.innerHTML = `
           <button id="reset-filters" class="button ghost">Reset Filters</button>
         </div>
         <div class="field inline-field">
-          <span>Selected View</span>
+          <span>Current View</span>
           <div class="selection-pill" id="selection-pill">All data</div>
         </div>
       </div>
 
       <div class="sub-panel">
         <div class="sub-panel-copy">
-          <h3>User Login</h3>
-          <p>Use the same FormulaDream backend login flow. Password is never stored.</p>
+          <h3>FormulaDream Login</h3>
+          <p>Use your regular FormulaDream account. Your password is never stored in the browser.</p>
         </div>
         <div class="field-grid compact">
           <label class="field">
@@ -93,43 +88,22 @@ app.innerHTML = `
           <label class="field">
             <span>Password</span>
             <input id="login-password" type="password" placeholder="Password" />
-          </label>
-          <div class="field inline-field">
-            <span>&nbsp;</span>
-            <button id="login-user" class="button primary">Login User</button>
-          </div>
-          <div class="field inline-field">
-            <span>Live Polling</span>
-            <label class="toggle">
-              <input id="auto-refresh" type="checkbox" />
-              <span>Every 15s</span>
             </label>
+            <div class="field inline-field">
+              <span>&nbsp;</span>
+              <button id="login-user" class="button primary">Sign In</button>
+            </div>
+            <div class="field inline-field">
+              <span>Auto Refresh</span>
+              <label class="toggle">
+                <input id="auto-refresh" type="checkbox" />
+                <span>Every 15s</span>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="sub-panel">
-        <div class="sub-panel-copy">
-          <h3>Optional Bot Login</h3>
-          <p>Use only for test environments. No bot credentials are bundled in the app.</p>
-        </div>
-        <div class="field-grid compact">
-          <label class="field">
-            <span>Bot Username</span>
-            <input id="bot-username" type="text" placeholder="Bot username" />
-          </label>
-          <label class="field field-wide">
-            <span>Bot Token</span>
-            <input id="bot-token" type="password" placeholder="Bot token" />
-          </label>
-          <div class="field inline-field">
-            <span>&nbsp;</span>
-            <button id="login-bot" class="button ghost">Login Bot</button>
-          </div>
-        </div>
-      </div>
-
-      <p id="feedback" class="feedback">Configure the backend and load the dashboard.</p>
+      <p id="feedback" class="feedback">Sign in to load the latest Race Center data.</p>
     </section>
 
     <section class="card inspector-card">
@@ -394,7 +368,6 @@ const defaultConfig = {
 };
 
 const elements = {
-  baseUrl: document.getElementById("base-url"),
   season: document.getElementById("season"),
   accessToken: document.getElementById("access-token"),
   authStatusLabel: document.getElementById("auth-status-label"),
@@ -402,15 +375,11 @@ const elements = {
   authStatusPill: document.getElementById("auth-status-pill"),
   loginIdentifier: document.getElementById("login-identifier"),
   loginPassword: document.getElementById("login-password"),
-  botUsername: document.getElementById("bot-username"),
-  botToken: document.getElementById("bot-token"),
   autoRefresh: document.getElementById("auto-refresh"),
   feedback: document.getElementById("feedback"),
   loadButton: document.getElementById("load-dashboard"),
-  saveButton: document.getElementById("save-settings"),
   logoutButton: document.getElementById("logout-button"),
   loginUserButton: document.getElementById("login-user"),
-  loginBotButton: document.getElementById("login-bot"),
   driverFilter: document.getElementById("driver-filter"),
   teamFilter: document.getElementById("team-filter"),
   resetFiltersButton: document.getElementById("reset-filters"),
@@ -477,12 +446,9 @@ const appState = {
 
 function readSettings() {
   return {
-    baseUrl: elements.baseUrl.value.trim(),
     season: elements.season.value.trim(),
     accessToken: elements.accessToken.value.trim(),
     loginIdentifier: elements.loginIdentifier.value.trim(),
-    botUsername: elements.botUsername.value.trim(),
-    botToken: elements.botToken.value.trim(),
     autoRefresh: elements.autoRefresh.checked,
   };
 }
@@ -492,10 +458,8 @@ function persistSettings() {
   localStorage.setItem(
     storageKey,
     JSON.stringify({
-      baseUrl: settings.baseUrl,
       season: settings.season,
       loginIdentifier: settings.loginIdentifier,
-      botUsername: settings.botUsername,
       autoRefresh: settings.autoRefresh,
     }),
   );
@@ -564,12 +528,9 @@ function loadDefaults() {
   const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
   const accessToken = sessionStorage.getItem(tokenStorageKey) || "";
 
-  elements.baseUrl.value = saved.baseUrl || defaultConfig.defaultBaseUrl || "";
   elements.season.value = saved.season || defaultConfig.defaultSeason || new Date().getUTCFullYear();
   elements.accessToken.value = accessToken;
   elements.loginIdentifier.value = saved.loginIdentifier || "";
-  elements.botUsername.value = saved.botUsername || "";
-  elements.botToken.value = "";
   elements.autoRefresh.checked = saved.autoRefresh || false;
   elements.statusRefresh.textContent = elements.autoRefresh.checked ? "Every 15s" : "Manual";
   updateAuthStatus();
@@ -600,7 +561,7 @@ async function apiRequest(path, { method = "GET", query, body, includeAuth = tru
       : `Bearer ${settings.accessToken}`;
   }
 
-  const response = await fetch(buildUrl(settings.baseUrl, path, query), {
+  const response = await fetch(buildUrl(defaultConfig.defaultBaseUrl, path, query), {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -1611,35 +1572,6 @@ function showCircuitInspector(circuitId) {
   );
 }
 
-async function loginBot() {
-  const settings = readSettings();
-  if (!settings.botUsername || !settings.botToken) {
-    applyFeedback("Bot username and bot token are required for bot login.", "error");
-    return;
-  }
-
-  try {
-    const payload = await apiRequest("/api/v1/bot/login", {
-      method: "POST",
-      includeAuth: false,
-      body: {
-        botUsername: settings.botUsername,
-        botToken: settings.botToken,
-      },
-    });
-    const accessToken = payload?.response?.accessToken;
-    if (!accessToken) {
-      throw new Error("Bot login succeeded but no access token was returned.");
-    }
-    persistAccessToken(accessToken);
-    elements.botToken.value = "";
-    persistSettings();
-    applyFeedback("Bot login succeeded and the access token is stored for this browser session.", "success");
-  } catch (error) {
-    applyFeedback(error.message, "error");
-  }
-}
-
 async function loginUser() {
   const settings = readSettings();
   const password = elements.loginPassword.value;
@@ -1673,10 +1605,6 @@ async function loginUser() {
 
 async function loadDashboard() {
   const settings = readSettings();
-  if (!settings.baseUrl) {
-    applyFeedback("Backend base URL is required.", "error");
-    return;
-  }
   if (!settings.accessToken) {
     applyFeedback("Access token is required for Race Center calls.", "error");
     return;
@@ -1775,11 +1703,6 @@ function configurePolling() {
   }, pollIntervalMs);
 }
 
-elements.saveButton.addEventListener("click", () => {
-  persistSettings();
-  applyFeedback("Settings saved locally in this browser.", "success");
-});
-
 elements.logoutButton.addEventListener("click", () => {
   clearAccessToken();
   applyFeedback("Access token cleared from this browser session.", "success");
@@ -1787,10 +1710,6 @@ elements.logoutButton.addEventListener("click", () => {
 
 elements.loadButton.addEventListener("click", () => {
   loadDashboard().catch((error) => applyFeedback(error.message, "error"));
-});
-
-elements.loginBotButton.addEventListener("click", () => {
-  loginBot().catch((error) => applyFeedback(error.message, "error"));
 });
 
 elements.loginUserButton.addEventListener("click", () => {
@@ -1847,3 +1766,6 @@ document.addEventListener("click", (event) => {
 
 loadDefaults();
 configurePolling();
+if (elements.accessToken.value.trim()) {
+  loadDashboard().catch((error) => applyFeedback(error.message, "error"));
+}

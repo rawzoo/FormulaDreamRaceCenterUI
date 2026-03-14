@@ -1,6 +1,6 @@
 # FormulaDream Race Center UI
 
-Standalone frontend for the FormulaDream Race Center experience, intended for deployment on Vercel.
+Standalone frontend for the FormulaDream F1 Race Center experience, intended for deployment on Vercel.
 
 ## Stack
 
@@ -30,6 +30,7 @@ VITE_DEFAULT_SEASON=2025
 - User password is never persisted.
 - Access tokens are stored only in `sessionStorage`, not `localStorage`.
 - Non-sensitive UI preferences use `localStorage`.
+- Backend base URL is env-driven, not user-editable in the page.
 - Vercel security headers are set in [vercel.json](/Users/rajukumar/FormulaDreamRaceCenterUI/vercel.json).
 
 ## Backend requirements
@@ -38,7 +39,6 @@ VITE_DEFAULT_SEASON=2025
 - The backend should keep auth on `https` only.
 - The frontend expects these backend APIs:
   - `/api/v1/users/login`
-  - `/api/v1/bot/login`
   - `/api/v1/race-center/current`
   - `/api/v1/race-center/current/stream`
   - `/api/v1/race-center/drivers`
