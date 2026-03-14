@@ -113,6 +113,11 @@ app.innerHTML = `
             </label>
 
             <label class="field">
+              <span>Theme</span>
+              <select id="theme-select"></select>
+            </label>
+
+            <label class="field">
               <span>Auto Refresh</span>
               <label class="toggle toggle-card">
                 <input id="auto-refresh" type="checkbox" />
@@ -218,7 +223,7 @@ app.innerHTML = `
               </div>
             </section>
 
-            <section class="split-grid split-grid--live">
+            <section class="live-context-stack">
               <section id="weather-section" class="card hidden">
                 <div class="card-header">
                   <div><p class="eyebrow">Conditions</p><h2>Weather</h2></div>
@@ -382,6 +387,7 @@ const storageKey = "race-center-ui-settings";
 const tokenStorageKey = "race-center-ui-access-token";
 const refreshTokenStorageKey = "race-center-ui-refresh-token";
 const rememberLoginStorageKey = "race-center-ui-remember-login";
+const themeStorageKey = "race-center-ui-theme";
 const pollIntervalMs = 15000;
 const defaultConfig = {
   defaultBaseUrl:
@@ -395,6 +401,11 @@ const seasonOptions = Array.from(
   { length: Math.max(currentYear - 2023 + 2, 4) },
   (_, index) => String(2023 + index),
 ).reverse();
+const themeOptions = [
+  { value: "sunset-grid", label: "Sunset Grid" },
+  { value: "emerald-pit", label: "Emerald Pit" },
+  { value: "ice-night", label: "Ice Night" },
+];
 
 const elements = {
   authView: document.getElementById("auth-view"),
@@ -405,6 +416,7 @@ const elements = {
   rememberLogin: document.getElementById("remember-login"),
   authFeedback: document.getElementById("auth-feedback"),
   seasonToolbar: document.getElementById("season-toolbar"),
+  themeSelect: document.getElementById("theme-select"),
   accessToken: document.getElementById("access-token"),
   autoRefresh: document.getElementById("auto-refresh"),
   feedback: document.getElementById("feedback"),
@@ -493,6 +505,7 @@ const appState = {
 function readSettings() {
   return {
     season: elements.seasonToolbar.value.trim(),
+    theme: elements.themeSelect.value.trim(),
     accessToken: elements.accessToken.value.trim(),
     loginIdentifier: elements.loginIdentifier.value.trim(),
     autoRefresh: elements.autoRefresh.checked,
@@ -506,16 +519,26 @@ function persistSettings() {
     storageKey,
     JSON.stringify({
       season: settings.season,
+      theme: settings.theme,
       loginIdentifier: settings.rememberLogin ? settings.loginIdentifier : "",
       autoRefresh: settings.autoRefresh,
     }),
   );
   localStorage.setItem(rememberLoginStorageKey, String(settings.rememberLogin));
+  localStorage.setItem(themeStorageKey, settings.theme || themeOptions[0].value);
 }
 
 function setSeasonValue(value) {
   const season = String(value || defaultConfig.defaultSeason);
   elements.seasonToolbar.value = season;
+}
+
+function applyTheme(themeName) {
+  const nextTheme = themeOptions.some((item) => item.value === themeName)
+    ? themeName
+    : themeOptions[0].value;
+  document.documentElement.setAttribute("data-theme", nextTheme);
+  elements.themeSelect.value = nextTheme;
 }
 
 function getStoredAccessToken() {
@@ -628,13 +651,17 @@ function loadDefaults() {
   const accessToken = getStoredAccessToken();
   const season = saved.season || defaultConfig.defaultSeason || String(currentYear);
   const rememberLogin = localStorage.getItem(rememberLoginStorageKey) !== "false";
+  const theme =
+    saved.theme || localStorage.getItem(themeStorageKey) || themeOptions[0].value;
 
   optionList(
     elements.seasonToolbar,
     seasonOptions.map((item) => ({ value: item, label: item })),
     "Select season",
   );
+  optionList(elements.themeSelect, themeOptions, "Select theme");
   setSeasonValue(season);
+  applyTheme(theme);
   elements.accessToken.value = accessToken;
   elements.loginIdentifier.value = saved.loginIdentifier || "";
   elements.rememberLogin.checked = rememberLogin;
@@ -2104,6 +2131,11 @@ elements.seasonToolbar.addEventListener("change", () => {
   if (elements.accessToken.value.trim()) {
     loadDashboard().catch((error) => applyFeedback(error.message, "error"));
   }
+});
+
+elements.themeSelect.addEventListener("change", () => {
+  applyTheme(elements.themeSelect.value);
+  persistSettings();
 });
 
 elements.tabButtons.forEach((button) => {
