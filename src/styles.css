@@ -565,6 +565,15 @@ select {
 
 .split-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.split-grid--live {
+  grid-template-columns: minmax(240px, 0.72fr) minmax(0, 1.28fr);
+}
+
+.split-grid--season-window {
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
 }
 
 .table-scroll {
@@ -634,6 +643,7 @@ select {
 .weather-grid {
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 10px;
+  max-width: 260px;
 }
 
 .roster-grid,
@@ -789,6 +799,7 @@ select {
 .featured-card h3 {
   margin: 0 0 6px;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .driver-card .subtext,
@@ -931,6 +942,13 @@ select {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+}
+
+.detail-panel-header h2,
+.inspector-copy h3,
+.inspector-subtitle,
+.detail-panel .subtext {
+  overflow-wrap: anywhere;
 }
 
 .detail-close {

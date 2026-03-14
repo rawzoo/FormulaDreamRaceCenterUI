@@ -318,7 +318,7 @@ app.innerHTML = `
               </section>
             </section>
 
-            <section class="split-grid">
+            <section class="split-grid split-grid--season-window">
               <section class="card">
                 <div class="card-header">
                   <div><p class="eyebrow">Calendar</p><h2>Season Schedule</h2></div>
